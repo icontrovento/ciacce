@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🪙 Ciacce</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Special+Elite&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --felt:#17322a;--felt2:#1d3c32;--gold:#c8a84b;--gold2:#e2c97e;
+  --ivory:#f4eed8;--ivory2:#e5d9bb;--ink:#1a1208;--ink2:#3d2e10;--ink3:#7a6340;
+  --parchment:#efe3c2;--red:#8b2020;--stamp:#2d5a1e;--r:8px;
+  --u0:#7eb3ff;--u1:#f4a0cc;--u2:#6de8a8;
+  --u0bg:rgba(53,100,220,0.18);--u1bg:rgba(180,60,120,0.18);--u2bg:rgba(45,160,100,0.18);
+  --u0bd:rgba(53,100,220,0.35);--u1bd:rgba(180,60,120,0.35);--u2bd:rgba(45,160,100,0.35);
+  --accent:var(--gold);
+}
+html,body{height:100%;background:var(--felt);color:var(--ivory);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+
+/* SETUP */
+#setup{display:none;position:fixed;inset:0;background:var(--felt);z-index:500;overflow-y:auto;padding:40px 20px}
+#setup.show{display:block}
+.sc{max-width:360px;margin:0 auto;display:flex;flex-direction:column;align-items:center}
+.big-logo{font-family:'Playfair Display',serif;font-size:52px;font-weight:900;color:var(--gold);text-align:center;line-height:1}
+.big-sub{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--gold2);margin:6px 0 36px;text-align:center}
+.scard{background:rgba(255,255,255,0.04);border:1px solid rgba(200,168,75,0.25);border-radius:14px;padding:22px;width:100%;margin-bottom:14px}
+.scard h2{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);margin-bottom:4px}
+.scard p{font-size:12px;color:rgba(244,238,216,0.45);line-height:1.6;margin-bottom:16px}
+.plist{display:flex;flex-direction:column;gap:8px}
+.ppick{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(200,168,75,0.2);border-radius:10px;cursor:pointer;transition:all 0.2s;width:100%;font-family:'Inter',sans-serif}
+.ppick:hover{background:rgba(200,168,75,0.12);border-color:var(--gold)}
+.pp-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0}
+.pp-name{font-family:'Playfair Display',serif;font-size:16px;color:var(--ivory);display:block}
+.pp-bal{font-size:11px;color:var(--gold);display:block;margin-top:1px}
+
+/* LAYOUT */
+.app{display:flex;flex-direction:column;height:100vh;max-width:480px;margin:0 auto}
+header{background:var(--felt2);border-bottom:1px solid rgba(200,168,75,0.2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.logo{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--gold)}
+.logo small{font-size:9px;display:block;color:var(--gold2);letter-spacing:2px;text-transform:uppercase;font-family:'Inter',sans-serif;font-weight:400}
+.hd-r{display:flex;align-items:center;gap:8px}
+.sync-btn{background:none;border:none;color:rgba(244,238,216,0.35);cursor:pointer;font-size:20px;line-height:1;padding:4px;transition:color 0.2s}
+.sync-btn:hover{color:var(--gold)}
+.sync-btn.spin{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hd-user{display:flex;align-items:center;gap:6px;cursor:pointer;background:rgba(200,168,75,0.08);border:1px solid rgba(200,168,75,0.25);border-radius:20px;padding:4px 10px}
+.hd-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+.hd-name{font-size:12px;font-weight:500}
+.hd-bal{font-size:10px;color:var(--gold2)}
+nav{display:flex;background:var(--felt2);border-bottom:1px solid rgba(200,168,75,0.12);flex-shrink:0;overflow-x:auto}
+.nb{flex:1;min-width:56px;padding:8px 2px;background:none;border:none;border-bottom:2px solid transparent;color:rgba(244,238,216,0.38);font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:2px}
+.nb-icon{font-size:14px}
+.nb:hover{color:var(--gold2)}
+.nb.on{color:var(--accent);border-bottom-color:var(--accent)}
+.content{flex:1;overflow-y:auto;padding:14px}
+.sec{display:none}.sec.on{display:block}
+
+/* TYPOGRAPHY */
+.sec-title{font-family:'Playfair Display',serif;font-size:21px;color:var(--gold);margin-bottom:2px}
+.sec-sub{font-size:10px;color:rgba(244,238,216,0.35);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px}
+.sec-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+
+/* BUTTONS */
+.btn{padding:8px 14px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:all 0.15s;display:inline-flex;align-items:center;gap:5px}
+.btn-gold{background:var(--gold);color:var(--ink)}
+.btn-gold:hover{background:var(--gold2)}
+.btn-red{background:var(--red);color:var(--ivory)}
+.btn-red:hover{background:#a02828}
+.btn-ghost{background:rgba(244,238,216,0.06);border:1px solid rgba(244,238,216,0.1);color:rgba(244,238,216,0.65)}
+.btn-ghost:hover{background:rgba(244,238,216,0.1)}
+.btn-outline{background:transparent;border:1px solid rgba(200,168,75,0.35);color:var(--gold)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-full{width:100%;justify-content:center}
+
+/* FORMS */
+.frow{margin-bottom:12px}
+.flabel{font-size:10px;font-weight:600;color:var(--gold2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;display:block}
+input,textarea,select{width:100%;background:rgba(244,238,216,0.05);border:1px solid rgba(200,168,75,0.22);border-radius:var(--r);padding:8px 10px;color:var(--ivory);font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s}
+input:focus,textarea:focus,select:focus{border-color:var(--gold)}
+select option{background:#1a3a2a}
+textarea{resize:vertical;min-height:64px;line-height:1.5}
+.trow{display:flex;gap:6px}
+.tbtn{flex:1;padding:7px 4px;border:1px solid rgba(200,168,75,0.22);border-radius:var(--r);background:transparent;color:rgba(244,238,216,0.45);font-size:11px;cursor:pointer;transition:all 0.15s;font-family:'Inter',sans-serif;text-align:center}
+.tbtn.on{background:rgba(200,168,75,0.16);border-color:var(--gold);color:var(--gold)}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:300;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--felt2);border:1px solid rgba(200,168,75,0.25);border-radius:16px 16px 0 0;padding:18px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-handle{width:34px;height:4px;background:rgba(200,168,75,0.25);border-radius:2px;margin:0 auto 14px}
+.modal-title{font-family:'Playfair Display',serif;font-size:19px;color:var(--gold);margin-bottom:14px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid rgba(200,168,75,0.12)}
+
+/* FILTERS */
+.filt-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.fchip{padding:4px 10px;border:1px solid rgba(200,168,75,0.18);border-radius:20px;background:transparent;color:rgba(244,238,216,0.4);font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
+.fchip.on{background:rgba(200,168,75,0.14);border-color:var(--gold);color:var(--gold)}
+
+/* USER TAGS */
+.utag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.u0t{background:var(--u0bg);color:var(--u0);border:1px solid var(--u0bd)}
+.u1t{background:var(--u1bg);color:var(--u1);border:1px solid var(--u1bd)}
+.u2t{background:var(--u2bg);color:var(--u2);border:1px solid var(--u2bd)}
+
+/* SCROLL SCOMMESSA */
+.scroll{background:var(--parchment);border-radius:8px;margin-bottom:12px;overflow:hidden}
+.scroll-hd{background:var(--ivory2);padding:9px 13px;border-bottom:1px solid rgba(0,0,0,0.08);display:flex;justify-content:space-between;align-items:center}
+.scroll-body{padding:11px 13px}
+.scroll-title{font-family:'Special Elite',cursive;font-size:14px;color:var(--ink);line-height:1.4;margin-bottom:5px}
+.scroll-prize{font-size:11px;color:var(--ink3);font-style:italic;margin-bottom:9px}
+.stakes-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.stake-chip{background:rgba(139,32,32,0.1);border:1px solid rgba(139,32,32,0.22);border-radius:4px;padding:2px 7px;font-size:11px;color:var(--ink2)}
+.pot-badge{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:var(--ink);background:rgba(200,168,75,0.18);border:1px solid rgba(200,168,75,0.35);border-radius:4px;padding:2px 7px}
+.scroll-ft{background:rgba(0,0,0,0.04);padding:8px 13px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-top:1px solid rgba(0,0,0,0.05)}
+.win-opt{padding:5px 10px;background:transparent;border:1px solid rgba(45,90,30,0.35);border-radius:4px;color:var(--ink2);font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
+.win-opt:hover{background:rgba(45,90,30,0.12);color:var(--stamp)}
+.badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
+.b-open{background:rgba(45,160,100,0.13);color:#4caf50;border:1px solid rgba(76,175,80,0.28)}
+.b-resolved{background:rgba(200,168,75,0.13);color:var(--gold);border:1px solid rgba(200,168,75,0.28)}
+.b-poll{background:rgba(120,80,200,0.13);color:#b39ddb;border:1px solid rgba(120,80,200,0.28)}
+
+/* POLL */
+.poll-opt{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;background:rgba(244,238,216,0.05);border:1px solid rgba(200,168,75,0.18);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:all 0.15s}
+.poll-opt:hover{background:rgba(200,168,75,0.1);border-color:var(--gold)}
+.poll-opt.voted{border-color:var(--gold);background:rgba(200,168,75,0.15)}
+.poll-opt-label{font-size:13px;color:var(--ink)}
+.poll-bar{height:4px;background:rgba(200,168,75,0.15);border-radius:2px;margin-top:4px;overflow:hidden}
+.poll-bar-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.4s}
+.poll-opt-builder{display:flex;gap:6px;margin-bottom:6px}
+.poll-opt-builder input{flex:1}
+.remove-opt{background:none;border:none;color:rgba(244,238,216,0.3);cursor:pointer;font-size:16px;padding:0 4px;line-height:1}
+.remove-opt:hover{color:var(--red)}
+
+/* LIBRERIA / SCAFFALI */
+.shelf-section{margin-bottom:24px}
+.shelf-label{font-size:10px;font-weight:600;color:var(--gold2);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
+.shelf{background:linear-gradient(180deg,#3a2010 0%,#2a1608 100%);border-radius:4px;padding:12px 10px 16px;position:relative;margin-bottom:4px;display:flex;gap:8px;flex-wrap:wrap;min-height:110px;align-items:flex-end}
+.shelf::after{content:'';position:absolute;bottom:0;left:0;right:0;height:8px;background:linear-gradient(180deg,#4a2a10,#3a1e08);border-radius:0 0 4px 4px;box-shadow:0 3px 8px rgba(0,0,0,0.4)}
+.book{display:flex;flex-direction:column;align-items:center;cursor:pointer;flex-shrink:0;transition:transform 0.2s}
+.book:hover{transform:translateY(-4px)}
+.book-cover{width:52px;height:76px;border-radius:2px 4px 4px 2px;overflow:hidden;box-shadow:2px 2px 6px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:22px}
+.book-spine{font-family:'Special Elite',cursive;font-size:7px;color:rgba(244,238,216,0.6);margin-top:4px;text-align:center;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book-stars{font-size:7px;color:#e8c200;text-align:center}
+
+/* DIARIO */
+.diary-wrap{display:flex;flex-direction:column;height:calc(100vh - 190px)}
+.diary-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.page-btn{background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:4px 8px;line-height:1}
+.page-btn:disabled{opacity:0.2;cursor:default}
+.page-info{font-family:'Playfair Display',serif;font-size:13px;color:var(--gold2);text-align:center}
+.diary-page{background:var(--parchment);border-radius:10px;flex:1;overflow-y:auto;padding:16px;box-shadow:4px 4px 12px rgba(0,0,0,0.3)}
+.diary-page::before{content:'';position:absolute;left:52px;top:0;bottom:0;width:1px;background:rgba(200,100,100,0.18);pointer-events:none}
+.diary-page{position:relative}
+.diary-date{font-family:'Special Elite',cursive;font-size:14px;color:var(--ink3);margin-bottom:12px;text-align:right}
+.diary-entry{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(0,0,0,0.06)}
+.diary-entry:last-child{border-bottom:none}
+.diary-entry-hd{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.diary-entry-text{font-family:'Special Elite',cursive;font-size:13px;color:var(--ink);line-height:1.7;padding-left:46px}
+.diary-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--ink3);opacity:0.35;font-family:'Special Elite',cursive;font-size:14px;gap:8px}
+.page-dots{display:flex;gap:4px;justify-content:center;margin-top:8px}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(200,168,75,0.2);cursor:pointer;transition:background 0.2s}
+.dot.on{background:var(--gold)}
+
+/* CLASSIFICA */
+.bal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.bal-card{background:rgba(244,238,216,0.04);border:1px solid rgba(200,168,75,0.18);border-radius:10px;padding:12px;text-align:center}
+.bal-name{font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.bal-amt{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;line-height:1}
+.bal-lbl{font-size:10px;color:rgba(200,168,75,0.5);margin-top:2px}
+.panel{background:rgba(244,238,216,0.04);border:1px solid rgba(200,168,75,0.15);border-radius:10px;padding:14px;margin-bottom:12px}
+.panel-title{font-size:9px;font-weight:600;color:var(--gold2);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
+
+/* ══ MERCATO ══ */
+.market-header{background:linear-gradient(135deg,rgba(200,168,75,0.12),rgba(200,168,75,0.04));border:1px solid rgba(200,168,75,0.3);border-radius:12px;padding:14px;margin-bottom:16px;text-align:center}
+.market-month{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);margin-bottom:2px}
+.market-countdown{font-size:11px;color:rgba(244,238,216,0.4);letter-spacing:1px}
+.market-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
+.market-item{background:rgba(244,238,216,0.04);border:1px solid rgba(200,168,75,0.25);border-radius:10px;padding:14px 10px;text-align:center;position:relative;overflow:hidden;cursor:pointer;transition:border-color 0.15s}
+.market-item:hover{border-color:rgba(200,168,75,0.45)}
+.market-item.owned{background:rgba(200,168,75,0.10);border-color:var(--gold)}
+.market-item.sold{background:rgba(244,238,216,0.02);border-color:rgba(200,168,75,0.12);opacity:0.55}
+.market-item.sold .item-emoji{filter:grayscale(1)}
+.market-item.owned .item-emoji{filter:drop-shadow(0 0 6px rgba(200,168,75,0.5))}
+.item-emoji{font-size:38px;margin:18px 0 8px;display:block;line-height:1}
+.item-name{font-family:'Playfair Display',serif;font-size:13px;color:var(--ivory);margin-bottom:6px;line-height:1.3}
+.item-price{font-size:12px;color:var(--gold);font-weight:600;margin-bottom:0}
+.item-owner{font-size:11px;color:var(--ink3)}
+.item-badge{position:absolute;top:8px;left:8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:2px 6px;border-radius:4px}
+.ib-sold{background:rgba(122,99,64,0.25);color:#a99a78;border:1px solid rgba(122,99,64,0.4)}
+.ib-yours{background:var(--gold);color:var(--ink)}
+.ib-new{background:rgba(200,168,75,0.16);color:var(--gold2);border:1px solid rgba(200,168,75,0.4)}
+.ib-avail{background:rgba(99,153,34,0.18);color:#9fd673;border:1px solid rgba(99,153,34,0.4)}
+
+/* ══ STANZA ══ */
+.room-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.room-tabs{display:flex;gap:6px}
+.room-tab{padding:5px 10px;border:1px solid rgba(200,168,75,0.2);border-radius:20px;background:transparent;color:rgba(244,238,216,0.4);font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
+.room-tab.on{background:rgba(200,168,75,0.14);border-color:var(--gold);color:var(--gold)}
+.room-canvas-wrap{position:relative;width:100%;aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:var(--room-bg,#2a1f14);border:2px solid rgba(200,168,75,0.25);touch-action:none}
+.room-floor{position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,0.02) 0,rgba(255,255,255,0.02) 1px,transparent 1px,transparent 20px),repeating-linear-gradient(-45deg,rgba(255,255,255,0.02) 0,rgba(255,255,255,0.02) 1px,transparent 1px,transparent 20px)}
+.room-obj{position:absolute;font-size:32px;cursor:grab;user-select:none;transition:transform 0.1s;filter:drop-shadow(2px 3px 4px rgba(0,0,0,0.5));line-height:1;display:flex;align-items:center;justify-content:center;width:48px;height:48px}
+.room-obj:active{cursor:grabbing;transform:scale(1.15)}
+.room-obj.editing{outline:2px dashed var(--gold);border-radius:6px}
+.room-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(244,238,216,0.2);gap:8px;font-size:13px;pointer-events:none}
+.room-empty-icon{font-size:36px}
+.inventory{margin-top:12px}
+.inv-title{font-size:10px;font-weight:600;color:var(--gold2);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.inv-grid{display:flex;gap:8px;flex-wrap:wrap}
+.inv-item{background:rgba(244,238,216,0.06);border:1px solid rgba(200,168,75,0.2);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:all 0.2s;min-width:60px}
+.inv-item:hover{background:rgba(200,168,75,0.12);border-color:var(--gold)}
+.inv-item.in-room{opacity:0.4;cursor:default}
+.inv-item .ii-emoji{font-size:24px;display:block;margin-bottom:4px}
+.inv-item .ii-name{font-size:9px;color:rgba(244,238,216,0.5);line-height:1.2}
+
+/* SCAMBIO */
+.trade-card{background:rgba(244,238,216,0.04);border:1px solid rgba(200,168,75,0.18);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.trade-emoji{font-size:28px;flex-shrink:0}
+.trade-info{flex:1}
+.trade-name{font-family:'Special Elite',cursive;font-size:13px;color:var(--ivory)}
+.trade-from{font-size:11px;color:rgba(244,238,216,0.4);margin-top:2px}
+.trade-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* UTILITY */
+.sync-ts{font-size:9px;color:rgba(244,238,216,0.28);text-align:right;margin-bottom:8px;min-height:12px}
+.empty{text-align:center;padding:36px 16px;color:rgba(244,238,216,0.2)}
+.empty-icon{font-size:38px;margin-bottom:8px}
+.empty p{font-size:12px;line-height:1.7}
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--stamp);color:#c8e6c9;padding:9px 16px;border-radius:20px;font-size:12px;font-weight:500;z-index:400;opacity:0;transition:opacity 0.25s;pointer-events:none;white-space:nowrap;border:1px solid rgba(100,180,80,0.3)}
+.toast.show{opacity:1}
+.loading{display:none;position:fixed;inset:0;background:rgba(23,50,42,0.88);z-index:600;align-items:center;justify-content:center;flex-direction:column;gap:10px}
+.loading.show{display:flex}
+.spinner{width:32px;height:32px;border:3px solid rgba(200,168,75,0.15);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite}
+.loading-txt{font-size:12px;color:var(--gold2)}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup">
+  <div class="sc">
+    <div class="big-logo">🪙</div>
+    <div class="big-logo" style="font-size:42px">Ciacce</div>
+    <div class="big-sub">il gioco di gruppo</div>
+    <div class="scard" id="step-who">
+      <h2>Chi sei?</h2>
+      <p>Seleziona il tuo profilo.</p>
+      <div class="plist" id="plist"></div>
+    </div>
+    <div class="scard" id="step-url" style="display:none">
+      <h2>Collega il database</h2>
+      <p>Incolla l'URL del tuo Google Apps Script.</p>
+      <div class="frow"><label class="flabel">Script URL</label><input type="url" id="setup-url" placeholder="https://script.google.com/macros/s/..."></div>
+      <button class="btn btn-gold btn-full" onclick="finishSetup()">Entra ›</button>
+      <div style="text-align:center;margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="demoMode()">Prova offline</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app" style="display:none">
+  <header>
+    <div class="logo">Ciacce <small>il gioco di gruppo</small></div>
+    <div class="hd-r">
+      <button class="sync-btn" id="sync-btn" onclick="sync()" title="Sincronizza">↻</button>
+      <div class="hd-user" onclick="logout()">
+        <div class="hd-av" id="hd-av"></div>
+        <div><div class="hd-name" id="hd-name"></div><div class="hd-bal" id="hd-bal"></div></div>
+      </div>
+    </div>
+  </header>
+  <nav>
+    <button class="nb on"  onclick="tab('scommesse',this)"><span class="nb-icon">🎲</span>Scommesse</button>
+    <button class="nb"     onclick="tab('libreria',this)"><span class="nb-icon">📚</span>Libreria</button>
+    <button class="nb"     onclick="tab('diario',this)"><span class="nb-icon">📖</span>Diario</button>
+    <button class="nb"     onclick="tab('mercato',this)"><span class="nb-icon">🏪</span>Mercato</button>
+    <button class="nb"     onclick="tab('stanza',this)"><span class="nb-icon">🏠</span>Stanza</button>
+    <button class="nb"     onclick="tab('classifica',this)"><span class="nb-icon">🏆</span>Classifica</button>
+  </nav>
+  <div class="content">
+
+    <!-- SCOMMESSE -->
+    <div class="sec on" id="sec-scommesse">
+      <div class="sec-hd">
+        <div><div class="sec-title">Scommesse</div><div class="sec-sub">Cartigli e sondaggi</div></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="openM('m-poll')">🗳️</button>
+          <button class="btn btn-gold btn-sm" onclick="openM('m-bet')">+ Scommessa</button>
+        </div>
+      </div>
+      <div class="filt-row">
+        <button class="fchip on" onclick="fBet('all',this)">Tutte</button>
+        <button class="fchip" onclick="fBet('open',this)">Aperte</button>
+        <button class="fchip" onclick="fBet('mine',this)">Mie</button>
+        <button class="fchip" onclick="fBet('poll',this)">Sondaggi</button>
+        <button class="fchip" onclick="fBet('resolved',this)">Risolte</button>
+      </div>
+      <div class="sync-ts" id="ts-bet"></div>
+      <div id="bets-list"></div>
+    </div>
+
+    <!-- LIBRERIA -->
+    <div class="sec" id="sec-libreria">
+      <div class="sec-hd">
+        <div><div class="sec-title">Libreria</div><div class="sec-sub">Recensisci, guadagna Ciacce</div></div>
+        <button class="btn btn-gold btn-sm" onclick="openM('m-review')">+ Aggiungi</button>
+      </div>
+      <div class="filt-row">
+        <button class="fchip on" onclick="fLib('all',this)">Tutto</button>
+        <button class="fchip" onclick="fLib('libro',this)">📚 Libri</button>
+        <button class="fchip" onclick="fLib('film',this)">🎬 Film</button>
+      </div>
+      <div class="sync-ts" id="ts-lib"></div>
+      <div id="shelf-container"></div>
+    </div>
+
+    <!-- DIARIO -->
+    <div class="sec" id="sec-diario">
+      <div class="sec-hd">
+        <div><div class="sec-title">Diario</div><div class="sec-sub">Un giorno, una pagina</div></div>
+        <button class="btn btn-gold btn-sm" onclick="openM('m-diary')">+ Aggiungi</button>
+      </div>
+      <div class="diary-wrap">
+        <div class="diary-nav">
+          <button class="page-btn" id="prev-btn" onclick="prevPage()">‹</button>
+          <div class="page-info" id="page-info">–</div>
+          <button class="page-btn" id="next-btn" onclick="nextPage()">›</button>
+        </div>
+        <div class="diary-page" id="diary-page"></div>
+        <div class="page-dots" id="page-dots"></div>
+      </div>
+    </div>
+
+    <!-- MERCATO -->
+    <div class="sec" id="sec-mercato">
+      <div class="market-header">
+        <div class="market-month" id="market-month">Mercato</div>
+        <div class="market-countdown" id="market-countdown"></div>
+      </div>
+      <div class="sync-ts" id="ts-market"></div>
+      <div class="market-grid" id="market-grid"></div>
+      <div id="trade-section"></div>
+      <div class="panel" id="sold-section" style="margin-top:14px"></div>
+    </div>
+
+    <!-- STANZA -->
+    <div class="sec" id="sec-stanza">
+      <div class="room-header">
+        <div><div class="sec-title" id="room-title">La mia stanza</div></div>
+        <div class="room-tabs" id="room-tabs"></div>
+      </div>
+      <div class="room-canvas-wrap" id="room-canvas">
+        <div class="room-floor"></div>
+        <div class="room-empty" id="room-empty"><span class="room-empty-icon">🏠</span><span>Compra oggetti al mercato<br>e arredala qui!</span></div>
+      </div>
+      <div class="inventory" id="inventory"></div>
+    </div>
+
+    <!-- CLASSIFICA -->
+    <div class="sec" id="sec-classifica">
+      <div class="sec-title">Classifica</div>
+      <div class="sec-sub" style="margin-bottom:16px">Saldo Ciacce</div>
+      <div class="bal-grid" id="bal-grid"></div>
+      <div class="panel"><div class="panel-title">Storico risolte</div><div id="hist-list"></div></div>
+      <div class="panel">
+        <div class="panel-title">⚙️ Admin</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="adminAddCiacce()">🎁 Assegna Ciacce</button>
+          <button class="btn btn-red btn-sm" onclick="adminResetCiacce()">♻️ Reset Ciacce</button>
+          <button class="btn btn-outline btn-sm" onclick="adminReleaseItem()">🏪 Rilascia oggetto ora</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="m-bet">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🎲 Nuovo Cartiglio</div>
+    <div class="frow"><label class="flabel">La scommessa</label><textarea id="bet-text" placeholder="Descrivi la scommessa..."></textarea></div>
+    <div class="frow"><label class="flabel">Tue Ciacce in palio</label><input type="number" id="bet-amt" placeholder="0" min="0"></div>
+    <div class="frow"><label class="flabel">Posta extra (facoltativa)</label><input type="text" id="bet-prize" placeholder="Es: il perdente paga da bere"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeM('m-bet')">Annulla</button>
+      <button class="btn btn-gold" onclick="addBet()">Piazza 🎲</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-join">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚔️ Accetta la Sfida</div>
+    <div id="join-preview"></div>
+    <div class="frow"><label class="flabel">Quante Ciacce rischi?</label><input type="number" id="join-amt" placeholder="5" min="1"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeM('m-join')">Annulla</button>
+      <button class="btn btn-red" onclick="confirmJoin()">Accetta ⚔️</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-poll">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🗳️ Nuovo Sondaggio</div>
+    <div class="frow"><label class="flabel">La domanda</label><input type="text" id="poll-q" placeholder="Es: dove andiamo sabato?"></div>
+    <div class="frow"><label class="flabel">Ciacce in palio</label><input type="number" id="poll-amt" placeholder="0" min="0"></div>
+    <div class="frow"><label class="flabel">Opzioni</label><div id="poll-opts-builder"></div><button class="btn btn-ghost btn-sm" onclick="addPollOpt()" style="margin-top:6px">+ Opzione</button></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeM('m-poll')">Annulla</button>
+      <button class="btn btn-gold" onclick="addPoll()">Crea 🗳️</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-review">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="m-review-title">📚 Nuova Recensione</div>
+    <div class="frow"><label class="flabel">Tipo</label><div class="trow"><button class="tbtn on" id="rt-libro" onclick="setRevType('libro')">📚 Libro</button><button class="tbtn" id="rt-film" onclick="setRevType('film')">🎬 Film</button></div></div>
+    <div class="frow"><label class="flabel">Titolo</label><input type="text" id="rev-title" placeholder="Titolo"></div>
+    <div class="frow"><label class="flabel">Recensione (1 riga)</label><input type="text" id="rev-text" placeholder="La tua impressione..."></div>
+    <div class="frow"><label class="flabel">Voto</label>
+      <div class="trow">
+        <button class="tbtn" id="rv1" onclick="setRevVote(1)">⭐</button>
+        <button class="tbtn" id="rv2" onclick="setRevVote(2)">⭐⭐</button>
+        <button class="tbtn on" id="rv3" onclick="setRevVote(3)">⭐⭐⭐</button>
+        <button class="tbtn" id="rv4" onclick="setRevVote(4)">⭐⭐⭐⭐</button>
+        <button class="tbtn" id="rv5" onclick="setRevVote(5)">⭐⭐⭐⭐⭐</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeM('m-review');editingReviewId=null;">Annulla</button>
+      <button class="btn btn-gold" onclick="addReview()">Pubblica +1🪙</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-book">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="book-detail-content"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeM('m-book')">Chiudi</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-diary">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="m-diary-title">📖 Aggiungi al Diario</div>
+    <div class="frow"><label class="flabel">Testo</label><textarea id="diary-text" placeholder="Racconta la giornata..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeM('m-diary');editingDiaryId=null;">Annulla</button>
+      <button class="btn btn-gold" onclick="addDiary()">Aggiungi +1🪙</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-item">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="item-detail-content"></div>
+    <div class="modal-footer" id="item-detail-footer"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-trade">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔄 Proponi Scambio</div>
+    <div id="trade-preview"></div>
+    <div class="frow"><label class="flabel">Cosa offri in cambio?</label><div id="trade-offer-grid" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"></div></div>
+    <div class="frow"><label class="flabel">A chi lo proponi?</label><div class="trow" id="trade-to-btns"></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeM('m-trade')">Annulla</button>
+      <button class="btn btn-gold" onclick="confirmTrade()">Proponi Scambio 🔄</button>
+    </div>
+  </div>
+</div>
+
+<div class="loading" id="loading"><div class="spinner"></div><div class="loading-txt" id="loading-txt">Caricando...</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ CATALOGO OGGETTI ══════════════════════════════════════════════════════════
+// Lista completa con emoji, nome, prezzo base e mese di disponibilità (1-12)
+// Gli oggetti ruotano: ogni mese ne appaiono 4, in copia unica
+const CATALOG = [
+  {id:'marsupio',    emoji:'👜', name:'Marsupio Rosso',         price:8,  month:1},
+  {id:'ombrellino',  emoji:'☂️', name:'Ombrellino a Scatto',    price:6,  month:1},
+  {id:'briscola',    emoji:'🃏', name:'Carte da Briscola',      price:5,  month:2},
+  {id:'cowboy',      emoji:'🤠', name:'Cappello da Cowboy',     price:7,  month:2},
+  {id:'kefia',       emoji:'🧣', name:'Kefia Verde',            price:5,  month:3},
+  {id:'pallone',     emoji:'⚽', name:'Pallone da Calcio',      price:6,  month:3},
+  {id:'volley',      emoji:'🏐', name:'Pallone da Volley',      price:6,  month:4},
+  {id:'bici-rossa',  emoji:'🚲', name:'Bici Rossa da Corsa',   price:10, month:4},
+  {id:'bici-blu',    emoji:'🚵', name:'Bici Azzurra da Corsa', price:10, month:5},
+  {id:'chitarra',    emoji:'🎸', name:'Chitarra Acustica',      price:9,  month:5},
+  {id:'zaino',       emoji:'🎒', name:'Zaino da Escursione',    price:7,  month:6},
+  {id:'tenda',       emoji:'⛺', name:'Tenda da Campeggio',     price:8,  month:6},
+  {id:'pallanuoto',  emoji:'🤽', name:'Cuffia da Pallanuoto',   price:5,  month:7},
+  {id:'kayak',       emoji:'🛶', name:'Kayak Arancione',        price:11, month:7},
+  {id:'frisbee',     emoji:'🥏', name:'Frisbee Fluo',           price:4,  month:8},
+  {id:'skateboard',  emoji:'🛹', name:'Skateboard Vintage',     price:9,  month:8},
+  {id:'chitbass',    emoji:'🎺', name:'Tromba Lucida',          price:8,  month:9},
+  {id:'dama',        emoji:'♟️', name:'Scacchiera da Viaggio',  price:6,  month:9},
+  {id:'torcia',      emoji:'🔦', name:'Torcia da Speleologo',   price:5,  month:10},
+  {id:'fischio',     emoji:'📯', name:'Corno da Stadio',        price:4,  month:10},
+  {id:'mantella',    emoji:'🧥', name:'Mantella Impermeabile',  price:7,  month:11},
+  {id:'lanterna',    emoji:'🏮', name:'Lanterna Rossa',         price:6,  month:11},
+  {id:'maschera',    emoji:'🎭', name:'Maschera di Carnevale',  price:8,  month:12},
+  {id:'pattini',     emoji:'⛸️', name:'Pattini da Ghiaccio',   price:9,  month:12},
+];
+
+// ══ STATE ═════════════════════════════════════════════════════════════════════
+let S = {
+  names:['Giammy','Fede','Gabri'], balances:[10,10,10],
+  bets:[], polls:[], reviews:[], diary:[],
+  market:{},      // {itemId: {owner, purchasePrice, forSale}}
+  inventory:{},   // {playerName: [{itemId, purchasePrice}]}
+  rooms:{},       // {playerName: [{itemId, x, y}]}
+  trades:[],      // proposte di scambio pendenti
+  marketReleased:[], // [{itemId, date}] oggetti sbloccati dal rilascio settimanale
+};
+let me = null;
+let scriptUrl = '';
+let isDemo = false;
+let lastSync = null;
+let betFilter='all', libFilter='all';
+let diaryPages=[], diaryPage=0;
+let joinBetId=null, revType='libro', revVote=3;
+let pollOpts=['',''];
+let editingBetId=null, editingReviewId=null, editingDiaryId=null, editingDiaryDate=null;
+let viewingRoomOf=null;  // null = mia stanza
+let tradeItemId=null, tradeOfferItemId=null, tradeTo=null;
+
+const UCOLORS=['var(--u0)','var(--u1)','var(--u2)'];
+const UTCLASS=['u0t','u1t','u2t'];
+const UBGAV=['rgba(53,100,220,0.25)','rgba(180,60,120,0.25)','rgba(45,160,100,0.25)'];
+const CIACCA='🪙';
+
+// ══ BOOT ══════════════════════════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  scriptUrl=localStorage.getItem('ciacce_url')||'';
+  isDemo=localStorage.getItem('ciacce_demo')==='1';
+  const su=localStorage.getItem('ciacce_user');
+  const sn=localStorage.getItem('ciacce_names');
+  const sc=localStorage.getItem('ciacce_cache');
+  if(sn) try{S.names=JSON.parse(sn);}catch(e){}
+  if(sc) try{const d=JSON.parse(sc);Object.assign(S,d);}catch(e){}
+  if(su!==null&&(scriptUrl||isDemo)){me=parseInt(su);showApp();sync();if(!isDemo)setInterval(sync,30000);}
+  else{renderSetup();document.getElementById('setup').classList.add('show');}
+});
+
+function renderSetup(){
+  document.getElementById('plist').innerHTML=S.names.map((n,i)=>`
+    <button class="ppick" onclick="pickPlayer(${i})">
+      <div class="pp-av" style="background:${UBGAV[i]};color:${UCOLORS[i]}">${n[0]}</div>
+      <div><span class="pp-name">${n}</span><span class="pp-bal">${CIACCA} ${S.balances[i]} Ciacce</span></div>
+    </button>`).join('');
+}
+function pickPlayer(i){me=i;localStorage.setItem('ciacce_user',i);document.getElementById('step-who').style.display='none';document.getElementById('step-url').style.display='block';}
+function finishSetup(){const url=document.getElementById('setup-url').value.trim();if(!url){showToast('Incolla l\'URL!');return;}scriptUrl=url;localStorage.setItem('ciacce_url',url);localStorage.removeItem('ciacce_demo');isDemo=false;showApp();sync();setInterval(sync,30000);}
+function demoMode(){isDemo=true;localStorage.setItem('ciacce_demo','1');showApp();}
+function logout(){localStorage.removeItem('ciacce_user');localStorage.removeItem('ciacce_url');localStorage.removeItem('ciacce_demo');me=null;document.getElementById('app').style.display='none';document.getElementById('step-who').style.display='block';document.getElementById('step-url').style.display='none';document.getElementById('setup').classList.add('show');renderSetup();}
+function showApp(){document.getElementById('setup').classList.remove('show');document.getElementById('app').style.display='flex';applyUserTheme();renderAll();}
+function applyUserTheme(){const c=['#7eb3ff','#f4a0cc','#6de8a8'];document.documentElement.style.setProperty('--accent',c[me]||c[0]);document.getElementById('hd-name').style.color=c[me]||c[0];}
+
+// ══ SYNC ══════════════════════════════════════════════════════════════════════
+let syncInFlight = false;
+let pushInFlight = false;
+
+async function sync(){
+  if(isDemo){renderAll();return;}
+  if(!scriptUrl)return;
+  if(pushInFlight)return; // non sovrascrivere uno stato locale non ancora salvato
+  if(syncInFlight)return; // evita richieste sovrapposte
+  syncInFlight = true;
+  const btn=document.getElementById('sync-btn');btn.classList.add('spin');
+  try{
+    const res=await fetch(scriptUrl+'?action=getAll');
+    const data=await res.json();
+    if(data.ok){
+      S.names=data.names||S.names;S.balances=data.balances||S.balances;
+      S.bets=data.bets||[];S.polls=data.polls||[];S.reviews=data.reviews||[];S.diary=data.diary||[];
+      S.market=data.market||{};S.inventory=data.inventory||{};S.rooms=data.rooms||{};S.trades=data.trades||[];S.marketReleased=data.marketReleased||[];
+      localStorage.setItem('ciacce_names',JSON.stringify(S.names));
+      localStorage.setItem('ciacce_cache',JSON.stringify({balances:S.balances,bets:S.bets,polls:S.polls,reviews:S.reviews,diary:S.diary,market:S.market,inventory:S.inventory,rooms:S.rooms,trades:S.trades,marketReleased:S.marketReleased}));
+      lastSync=new Date();renderAll();
+    }
+  }catch(e){showToast('Offline — dati locali');}
+  btn.classList.remove('spin');
+  syncInFlight = false;
+}
+
+async function push(action,payload,retry){
+  if(isDemo){localStorage.setItem('ciacce_cache',JSON.stringify({balances:S.balances,bets:S.bets,polls:S.polls,reviews:S.reviews,diary:S.diary,market:S.market,inventory:S.inventory,rooms:S.rooms,trades:S.trades,marketReleased:S.marketReleased}));renderAll();return{ok:true};}
+  if(!scriptUrl)return{ok:false};
+
+  // Se c'è già un'altra scrittura in corso, aspetta che finisca prima di
+  // partire: evita che due push si accavallino lato client.
+  while(pushInFlight){ await new Promise(r=>setTimeout(r,150)); }
+  pushInFlight = true;
+
+  try{
+    const res=await fetch(`${scriptUrl}?action=${action}&data=${encodeURIComponent(JSON.stringify(payload))}`);
+    const data=await res.json();
+    if(data.ok){
+      pushInFlight = false;
+      await sync();
+      return data;
+    } else {
+      showToast('Errore: '+(data.error||'sconosciuto'));
+      pushInFlight = false;
+      return data;
+    }
+  }catch(e){
+    pushInFlight = false;
+    // Errore di rete: ritenta automaticamente una volta dopo 2s prima di
+    // arrenderti, così un blip di connessione non perde silenziosamente
+    // l'azione dell'utente.
+    if(!retry){
+      await new Promise(r=>setTimeout(r,2000));
+      return push(action,payload,true);
+    }
+    showToast('⚠️ Non salvato: controlla la connessione e riprova');
+    return {ok:false, error:'network'};
+  }
+}
+
+// ══ RENDER PRINCIPALE ════════════════════════════════════════════════════════
+function renderAll(){renderHeader();renderBets();renderLibrary();renderDiary();renderMarket();renderRoom();renderClassifica();}
+
+function renderHeader(){
+  if(me===null)return;
+  const av=document.getElementById('hd-av');
+  av.textContent=S.names[me][0];av.style.background=UBGAV[me];av.style.color=UCOLORS[me];
+  document.getElementById('hd-name').textContent=S.names[me];
+  document.getElementById('hd-bal').textContent=CIACCA+' '+(S.balances[me]||0);
+}
+function utag(i){if(i<0||i>=S.names.length)return`<span class="utag">${i}</span>`;return`<span class="utag ${UTCLASS[i]}">${S.names[i]}</span>`;}
+function utagN(n){return utag(S.names.indexOf(n));}
+function ts(id){if(lastSync)document.getElementById(id).textContent='Aggiornato '+lastSync.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function today(){return new Date().toLocaleDateString('it-IT');}
+function currentMonth(){return new Date().getMonth()+1;}
+
+// ══ SCOMMESSE ════════════════════════════════════════════════════════════════
+function renderBets(){
+  ts('ts-bet');const myName=S.names[me];
+  let all=[...(S.bets||[]).map(b=>({...b,_type:'bet'})),...(S.polls||[]).map(p=>({...p,_type:'poll'}))].sort((a,b)=>parseInt(b.id)-parseInt(a.id));
+  if(betFilter==='open')all=all.filter(x=>x.status==='open');
+  else if(betFilter==='resolved')all=all.filter(x=>x.status==='resolved');
+  else if(betFilter==='mine')all=all.filter(x=>x.author===myName);
+  else if(betFilter==='poll')all=all.filter(x=>x._type==='poll');
+  if(!all.length){document.getElementById('bets-list').innerHTML=`<div class="empty"><div class="empty-icon">🎲</div><p>Nessuna scommessa.<br>Piazza il primo cartiglio!</p></div>`;return;}
+  document.getElementById('bets-list').innerHTML=all.map(x=>x._type==='bet'?renderBetCard(x,myName):renderPollCard(x,myName)).join('');
+}
+function renderBetCard(b,myName){
+  const total=(parseInt(b.amount)||0)+(b.stakes||[]).reduce((a,s)=>a+(parseInt(s.amount)||0),0);
+  const alreadyIn=(b.stakes||[]).find(s=>s.user===myName);
+  const canJoin=b.author!==myName&&b.status==='open'&&!alreadyIn;
+  const canResolve=b.author===myName&&b.status==='open'&&(b.stakes||[]).length>0;
+  const canEdit=b.author===myName&&b.status==='open'&&!(b.stakes||[]).length;
+  const canDelete=b.author===myName&&b.status==='open';
+  const stakes=(b.stakes||[]).map(s=>`<span class="stake-chip">${utagN(s.user)} ${CIACCA}${s.amount}</span>`).join('');
+  const parties=[...new Set([b.author,...(b.stakes||[]).map(s=>s.user)])];
+  return`<div class="scroll">
+    <div class="scroll-hd">
+      <div style="display:flex;align-items:center;gap:6px">${utagN(b.author)}<span class="badge ${b.status==='open'?'b-open':'b-resolved'}">${b.status==='open'?'Aperta':'Risolta'}</span></div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <span class="pot-badge">${CIACCA}${total}</span>
+        ${canEdit?`<button onclick="editBet('${b.id}')" style="background:none;border:none;color:var(--ink3);cursor:pointer;font-size:13px">✏️</button>`:''}
+        ${canDelete?`<button onclick="deleteBet('${b.id}')" style="background:none;border:none;color:rgba(139,32,32,0.6);cursor:pointer;font-size:13px">🗑</button>`:''}
+      </div>
+    </div>
+    <div class="scroll-body">
+      <div class="scroll-title">"${esc(b.text)}"</div>
+      ${b.prize?`<div class="scroll-prize">🎁 ${esc(b.prize)}</div>`:''}
+      <div class="stakes-row">${stakes||`<span style="font-size:11px;color:var(--ink3)">Nessuno ha ancora accettato</span>`}</div>
+      ${b.status==='resolved'?`<div style="font-size:12px;color:var(--stamp);font-weight:700">🏆 ${b.winner}</div>`:''}
+    </div>
+    ${canJoin||canResolve?`<div class="scroll-ft">
+      ${canJoin?`<button class="btn btn-red btn-sm" onclick="openJoin('${b.id}')">⚔️ Accetta</button>`:''}
+      ${canResolve?`<div style="width:100%"><div style="font-size:10px;color:var(--ink3);margin-bottom:4px;font-weight:600;text-transform:uppercase">Chi ha vinto?</div><div style="display:flex;gap:5px;flex-wrap:wrap">${parties.map(u=>`<button class="win-opt" onclick="resolveBet('${b.id}','${u}')">${u}</button>`).join('')}</div></div>`:''}
+    </div>`:''}
+  </div>`;
+}
+function renderPollCard(p,myName){
+  const myVote=(p.votes||{})[myName];
+  const canVote=p.status==='open'&&!myVote;
+  const canResolve=p.author===myName&&p.status==='open'&&Object.keys(p.votes||{}).length>0;
+  const totalVoters=Object.keys(p.votes||{}).length;
+  const optsHtml=(p.options||[]).map(opt=>{
+    const voters=Object.entries(p.votes||{}).filter(([,v])=>v===opt).map(([u])=>u);
+    const pct=totalVoters>0?Math.round(voters.length/totalVoters*100):0;
+    const isMine=myVote===opt;
+    return`<div class="poll-opt${isMine?' voted':''}" onclick="${canVote?`castVote('${p.id}','${opt.replace(/'/g,"\\'")}')`:''}" style="${!canVote?'cursor:default':''}">
+      <div><div class="poll-opt-label">${esc(opt)}</div>${voters.length?`<div style="font-size:10px;color:var(--ink3);margin-top:2px">${voters.map(u=>utagN(u)).join(' ')}</div>`:''}${totalVoters>0?`<div class="poll-bar"><div class="poll-bar-fill" style="width:${pct}%"></div></div>`:''}</div>
+      ${isMine?`<span style="font-size:14px">✓</span>`:''}
+    </div>`;
+  }).join('');
+  return`<div class="scroll">
+    <div class="scroll-hd">
+      <div style="display:flex;align-items:center;gap:6px">${utagN(p.author)}<span class="badge b-poll">Sondaggio</span>${p.status==='resolved'?`<span class="badge b-resolved">Risolto</span>`:''}</div>
+      ${(parseInt(p.amount)||0)>0?`<span class="pot-badge">${CIACCA}${p.amount}</span>`:''}
+    </div>
+    <div class="scroll-body">
+      <div class="scroll-title" style="margin-bottom:10px">"${esc(p.question)}"</div>
+      ${optsHtml}
+      ${p.status==='resolved'?`<div style="font-size:12px;color:var(--stamp);font-weight:700;margin-top:8px">🏆 Vince: "${p.winningOption}"</div>`:''}
+    </div>
+    ${canResolve?`<div class="scroll-ft"><div style="width:100%"><div style="font-size:10px;color:var(--ink3);margin-bottom:4px;font-weight:600;text-transform:uppercase">Opzione vincente?</div><div style="display:flex;gap:5px;flex-wrap:wrap">${(p.options||[]).map(o=>`<button class="win-opt" onclick="resolvePoll('${p.id}','${o.replace(/'/g,"\\'")}')">\"${o}\"</button>`).join('')}</div></div></div>`:''}
+  </div>`;
+}
+
+// ══ LIBRERIA ════════════════════════════════════════════════════════════════
+function renderLibrary(){
+  ts('ts-lib');
+  let items=S.reviews||[];
+  if(libFilter==='libro')items=items.filter(r=>r.type==='libro');
+  else if(libFilter==='film')items=items.filter(r=>r.type==='film');
+  const libri=items.filter(r=>r.type==='libro'),film=items.filter(r=>r.type==='film');
+  const shelfHTML=(list,icon,label)=>{
+    if(!list.length)return'';
+    const books=list.map(r=>`<div class="book" onclick="openBook('${r.id}')">
+      <div class="book-cover" style="background:${shelfColor(r.id)}">${icon}</div>
+      <div class="book-spine">${r.title.substring(0,14)}</div>
+      <div class="book-stars">${'⭐'.repeat(r.vote||3)}</div>
+    </div>`).join('');
+    return`<div class="shelf-section"><div class="shelf-label">${icon} ${label}</div><div class="shelf">${books}</div></div>`;
+  };
+  const empty=!libri.length&&!film.length;
+  document.getElementById('shelf-container').innerHTML=empty?`<div class="empty"><div class="empty-icon">📚</div><p>La libreria è vuota.<br>Aggiungi una recensione e guadagna una Ciacca!</p></div>`:(libFilter!=='film'?shelfHTML(libri,'📚','Libri'):'')+( libFilter!=='libro'?shelfHTML(film,'🎬','Film'):'');
+}
+function shelfColor(id){const c=['#8b3a3a','#3a6b8b','#3a7a5a','#7a5a3a','#5a3a7a','#7a6a3a'];return c[Math.abs(parseInt(id||'0'))%c.length];}
+function openBook(id){
+  const r=(S.reviews||[]).find(x=>x.id===id);if(!r)return;
+  const ai=S.names.indexOf(r.author);
+  document.getElementById('book-detail-content').innerHTML=`
+    <div style="font-family:'Playfair Display',serif;font-size:17px;color:var(--gold);margin-bottom:4px">${esc(r.title)}</div>
+    <div style="font-size:11px;color:rgba(200,168,75,0.5);margin-bottom:8px">${r.type==='libro'?'📚 Libro':'🎬 Film'}</div>
+    <div style="font-size:14px;color:var(--gold);margin-bottom:10px">${'⭐'.repeat(r.vote||3)}</div>
+    <div style="font-style:italic;font-size:13px;color:var(--ivory2);border-left:2px solid var(--gold);padding-left:10px;line-height:1.6;margin-bottom:10px">"${esc(r.text)}"</div>
+    <div style="font-size:11px;color:rgba(244,238,216,0.4)">${utag(ai)} · ${r.date}</div>
+    ${r.author===S.names[me]?`<div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-ghost btn-sm" onclick="closeM('m-book');editReview('${r.id}')">✏️ Modifica</button>
+      <button class="btn btn-sm" style="background:rgba(139,32,32,0.3);color:#f48a8a;border:none" onclick="closeM('m-book');deleteReview('${r.id}')">🗑 Elimina</button>
+    </div>`:''}`
+  ;openM('m-book');
+}
+
+// ══ DIARIO ══════════════════════════════════════════════════════════════════
+function buildDiaryPages(){const dates=[...new Set((S.diary||[]).map(p=>p.date))].sort((a,b)=>b.localeCompare(a));diaryPages=dates;if(diaryPage>=diaryPages.length&&diaryPages.length>0)diaryPage=0;}
+function renderDiary(){
+  buildDiaryPages();
+  const pe=document.getElementById('diary-page'),ie=document.getElementById('page-info'),pb=document.getElementById('prev-btn'),nb=document.getElementById('next-btn'),de=document.getElementById('page-dots');
+  if(!diaryPages.length){pe.innerHTML=`<div class="diary-empty"><span style="font-size:36px">📖</span><span>Il diario è vuoto</span></div>`;ie.textContent='–';pb.disabled=nb.disabled=true;de.innerHTML='';return;}
+  const date=diaryPages[diaryPage];
+  const pd=(S.diary||[]).find(p=>p.date===date);
+  const entries=pd?pd.entries||[]:[];
+  ie.innerHTML=`<div>${date}</div><div style="font-size:10px;opacity:0.6">Pagina ${diaryPage+1} di ${diaryPages.length}</div>`;
+  pb.disabled=diaryPage<=0;nb.disabled=diaryPage>=diaryPages.length-1;
+  de.innerHTML=diaryPages.map((_,i)=>`<div class="dot${i===diaryPage?' on':''}" onclick="goPage(${i})"></div>`).join('');
+  if(!entries.length){pe.innerHTML=`<div class="diary-date">${date}</div><div class="diary-empty" style="height:auto;padding:30px 0;opacity:0.3"><span>Pagina vuota</span></div>`;return;}
+  pe.innerHTML=`<div class="diary-date">${date}</div>`+entries.map(e=>{
+    const ai=S.names.indexOf(e.user);const color=UCOLORS[ai]||'var(--gold)';
+    return`<div class="diary-entry">
+      <div class="diary-entry-hd">
+        <div style="width:26px;height:26px;font-size:10px;background:${UBGAV[ai]||'rgba(200,168,75,0.2)'};color:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">${S.names[ai]?S.names[ai][0]:'?'}</div>
+        <span style="font-size:11px;font-weight:600;color:${color}">${e.user}</span>
+        <span style="font-size:9px;color:rgba(244,238,216,0.3);margin-left:auto">${e.time||''}</span>
+        ${e.user===S.names[me]?`<button onclick="editDiaryEntry('${date}','${e.id}')" style="background:none;border:none;color:rgba(200,168,75,0.5);cursor:pointer;font-size:12px">✏️</button><button onclick="deleteDiaryEntry('${date}','${e.id}')" style="background:none;border:none;color:rgba(139,32,32,0.5);cursor:pointer;font-size:12px">🗑</button>`:''}
+      </div>
+      ${e.text?`<div class="diary-entry-text" style="color:var(--ink)">${esc(e.text)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function prevPage(){if(diaryPage>0){diaryPage--;renderDiary();}}
+function nextPage(){if(diaryPage<diaryPages.length-1){diaryPage++;renderDiary();}}
+function goPage(i){diaryPage=i;renderDiary();}
+
+// ══ MERCATO ═════════════════════════════════════════════════════════════════
+// Gli oggetti disponibili sono definiti nel CATALOG qui sopra (il "pool").
+// Il server (Apps Script) ne sblocca uno a caso ogni settimana e lo registra
+// in S.marketReleased = [{itemId, date}]. Qui mostriamo solo quelli sbloccati.
+
+function renderMarket(){
+  ts('ts-market');
+  const released = S.marketReleased || [];
+  const dateMap = {};
+  released.forEach(r => { dateMap[r.itemId] = r.date; });
+  const items = CATALOG.filter(x => dateMap[x.id])
+    .sort((a,b) => new Date(dateMap[b.id]) - new Date(dateMap[a.id]));
+
+  let countdownText = 'In attesa del primo rilascio';
+  if(released.length){
+    const lastDate = released.reduce((max,r) => new Date(r.date) > new Date(max) ? r.date : max, released[0].date);
+    const next = new Date(lastDate); next.setDate(next.getDate()+7);
+    const days = Math.max(0, Math.ceil((next - new Date())/(1000*60*60*24)));
+    countdownText = days <= 0 ? 'Nuovo oggetto in arrivo' : `Prossimo oggetto tra ${days} giorni`;
+  }
+  document.getElementById('market-month').textContent = 'Mercato';
+  document.getElementById('market-countdown').textContent = countdownText;
+
+  const myName = S.names[me];
+  const mkt = S.market || {};
+  const now = new Date();
+
+  document.getElementById('market-grid').innerHTML = !items.length
+    ? `<div style="grid-column:1/-1;font-size:12px;color:rgba(244,238,216,0.3);text-align:center;padding:24px 0">Nessun oggetto ancora rilasciato, torna la prossima settimana!</div>`
+    : items.map(item=>{
+    const mktEntry = mkt[item.id];
+    const owner = mktEntry?.owner || null;
+    const isMine = owner === myName;
+    const isSold = owner !== null && owner !== undefined;
+    const resellPrice = mktEntry ? Math.ceil(mktEntry.purchasePrice/2) : 0;
+    const releaseDate = dateMap[item.id] ? new Date(dateMap[item.id]) : null;
+    const isNew = releaseDate && (now - releaseDate) < (3*24*60*60*1000);
+
+    let badge;
+    if(isMine) badge = `<div class="item-badge ib-yours">Tua</div>`;
+    else if(isSold) badge = `<div class="item-badge ib-sold">Non disponibile</div>`;
+    else if(isNew) badge = `<div class="item-badge ib-new">Nuovo</div>`;
+    else badge = `<div class="item-badge ib-avail">Disponibile</div>`;
+
+    return`<div class="market-item${isSold&&!isMine?' sold':''}${isMine?' owned':''}" onclick="openItem('${item.id}')">
+      ${badge}
+      <div class="item-emoji">${item.emoji}</div>
+      <div class="item-name">${item.name}</div>
+      <div class="item-price">${isMine?`rivendi a ${CIACCA}${resellPrice}`:isSold?`${owner}`:`${CIACCA} ${item.price}`}</div>
+    </div>`;
+  }).join('');
+
+  // Sezione scambi pendenti
+  const myTrades=(S.trades||[]).filter(t=>t.to===myName&&t.status==='pending');
+  const tradeSec=document.getElementById('trade-section');
+  if(myTrades.length){
+    tradeSec.innerHTML=`<div class="panel"><div class="panel-title">🔄 Scambi in arrivo</div>`+
+    myTrades.map(t=>{
+      const offItem=CATALOG.find(x=>x.id===t.offerItemId);
+      const wantItem=CATALOG.find(x=>x.id===t.wantItemId);
+      if(!offItem||!wantItem)return'';
+      return`<div class="trade-card">
+        <div class="trade-emoji">${offItem.emoji}</div>
+        <div class="trade-info"><div class="trade-name">${offItem.name}</div><div class="trade-from">${t.from} vuole il tuo ${wantItem.emoji} ${wantItem.name}</div></div>
+        <div class="trade-actions">
+          <button class="btn btn-gold btn-sm" onclick="acceptTrade('${t.id}')">✓</button>
+          <button class="btn btn-ghost btn-sm" onclick="rejectTrade('${t.id}')">✕</button>
+        </div>
+      </div>`;
+    }).join('')+`</div>`;
+  } else tradeSec.innerHTML='';
+
+  // Lista di tutti gli oggetti già messi sul mercato (di ogni mese) e venduti
+  const soldEntries = Object.entries(mkt).filter(([,e]) => e && e.owner);
+  const soldSec = document.getElementById('sold-section');
+  if(!soldEntries.length){
+    soldSec.innerHTML = `<div class="panel-title">📋 Oggetti venduti</div><div style="font-size:12px;color:rgba(244,238,216,0.25)">Nessun oggetto ancora acquistato</div>`;
+  } else {
+    soldSec.innerHTML = `<div class="panel-title">📋 Oggetti venduti</div>` +
+      soldEntries.map(([id,e]) => {
+        const cat = CATALOG.find(x => x.id === id);
+        if(!cat) return '';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(200,168,75,0.08);font-size:12px">
+          <span style="font-size:18px">${cat.emoji}</span>
+          <span style="flex:1;color:var(--ivory2)">${cat.name}</span>
+          <span style="color:var(--gold)">${e.owner}</span>
+        </div>`;
+      }).join('');
+  }
+}
+
+function openItem(itemId){
+  const item=CATALOG.find(x=>x.id===itemId);if(!item)return;
+  const mkt=S.market||{};const mktEntry=mkt[itemId];
+  const myName=S.names[me];
+  const owner=mktEntry?.owner||null;
+  const isMine=owner===myName;
+  const isSold=!!owner&&!isMine;
+  const resellPrice=mktEntry?Math.ceil(mktEntry.purchasePrice/2):0;
+  const myBal=S.balances[me]||0;
+
+  document.getElementById('item-detail-content').innerHTML=`
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:64px;line-height:1;margin-bottom:8px">${item.emoji}</div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--gold)">${item.name}</div>
+      ${owner?`<div style="font-size:12px;color:rgba(244,238,216,0.4);margin-top:4px">Proprietario: ${owner}</div>`:''}
+    </div>`;
+
+  const footer=document.getElementById('item-detail-footer');
+  footer.innerHTML=`<button class="btn btn-ghost" onclick="closeM('m-item')">Chiudi</button>`;
+
+  if(isMine){
+    footer.innerHTML+=`<button class="btn btn-outline btn-sm" onclick="closeM('m-item');openTrade('${itemId}')">🔄 Scambia</button>`;
+    footer.innerHTML+=`<button class="btn btn-red btn-sm" onclick="resellItem('${itemId}')">Rivendi ${CIACCA}${resellPrice}</button>`;
+  } else if(!isSold){
+    if(myBal>=item.price)footer.innerHTML+=`<button class="btn btn-gold" onclick="buyItem('${itemId}')">Compra ${CIACCA}${item.price}</button>`;
+    else footer.innerHTML+=`<button class="btn btn-ghost" disabled style="opacity:0.4">Servono ${CIACCA}${item.price} (ne hai ${myBal})</button>`;
+  }
+  openM('m-item');
+}
+
+async function buyItem(itemId){
+  const item = CATALOG.find(x => x.id === itemId);
+  if(!item) return;
+
+  const myName = S.names[me];
+
+  if((S.balances[me] || 0) < item.price){
+    showToast('Ciacce insufficienti!');
+    return;
+  }
+
+  // inizializzazioni sicure
+  S.market = S.market || {};
+  S.inventory = S.inventory || {};
+  if(!S.inventory[myName]) S.inventory[myName] = [];
+
+  // aggiorna stato locale
+  S.balances[me] = (S.balances[me] || 0) - item.price;
+  S.market[itemId] = { owner: myName, purchasePrice: item.price };
+  S.inventory[myName].push({ itemId, purchasePrice: item.price });
+
+  closeM('m-item');
+  showToast(`${item.emoji} ${item.name} acquistato!`);
+  renderMarket();
+  renderRoom();
+  renderClassifica();
+
+  const res = await push('buyItem', {
+    itemId,
+    buyer: myName,
+    price: item.price,
+    balances: S.balances,
+    market: S.market,
+    inventory: S.inventory
+  });
+
+  if(res?.balances)  S.balances  = res.balances;
+  if(res?.inventory) S.inventory = res.inventory;
+  if(res?.market)    S.market    = res.market;
+
+  renderMarket();
+  renderRoom();
+  renderClassifica();
+}
+
+async function resellItem(itemId){
+  const item = CATALOG.find(x => x.id === itemId);
+  if(!item) return;
+
+  const myName = S.names[me];
+  S.inventory = S.inventory || {};
+  S.market = S.market || {};
+
+  const invEntry = (S.inventory[myName] || []).find(x => x.itemId === itemId);
+  if(!invEntry){ showToast('Oggetto non nel tuo inventario'); return; }
+
+  if(!confirm(`Rivendere ${item.name}?`)) return;
+
+  const resellPrice = Math.ceil(invEntry.purchasePrice / 2);
+
+  // rimuovi dall'inventario
+  S.inventory[myName] = (S.inventory[myName] || []).filter(x => x.itemId !== itemId);
+  // rimuovi dalla stanza se presente
+  S.rooms = S.rooms || {};
+  S.rooms[myName] = (S.rooms[myName] || []).filter(x => x.itemId !== itemId);
+  // rimetti l'oggetto disponibile sul mercato
+  delete S.market[itemId];
+  // accredita le ciacce
+  S.balances[me] = (S.balances[me] || 0) + resellPrice;
+
+  closeM('m-item');
+  showToast(`Rivenduto per ${CIACCA}${resellPrice}!`);
+  renderMarket();
+  renderRoom();
+  renderClassifica();
+
+  const res = await push('resellItem', {
+    itemId,
+    seller: myName,
+    resellPrice,
+    balances: S.balances,
+    market: S.market,
+    inventory: S.inventory,
+    rooms: S.rooms
+  });
+
+  if(res?.balances)  S.balances  = res.balances;
+  if(res?.inventory) S.inventory = res.inventory;
+  if(res?.market)    S.market    = res.market;
+  if(res?.rooms)      S.rooms     = res.rooms;
+
+  renderMarket();
+  renderRoom();
+  renderClassifica();
+}
+
+function openTrade(itemId){
+  tradeItemId=itemId;tradeOfferItemId=null;tradeTo=null;
+  const item=CATALOG.find(x=>x.id===itemId);if(!item)return;
+  const myName=S.names[me];
+  document.getElementById('trade-preview').innerHTML=`<div style="text-align:center;padding:12px;background:rgba(244,238,216,0.04);border-radius:8px;margin-bottom:12px"><div style="font-size:36px">${item.emoji}</div><div style="font-family:'Special Elite',cursive;font-size:14px;color:var(--ivory)">${item.name}</div><div style="font-size:11px;color:rgba(244,238,216,0.4);margin-top:4px">Vuoi scambiare questo oggetto</div></div>`;
+  // Oggetti che l'altro possiede
+  const others=S.names.filter(n=>n!==myName);
+  const offGrid=document.getElementById('trade-offer-grid');
+  offGrid.innerHTML=`<div style="font-size:12px;color:rgba(244,238,216,0.4);width:100%">Seleziona cosa vuoi in cambio (dall'inventario degli altri)</div>`+
+  others.flatMap(n=>(S.inventory[n]||[]).map(inv=>{
+    const ci=CATALOG.find(x=>x.id===inv.itemId);if(!ci)return'';
+    return`<div class="inv-item" id="toff-${ci.id}" onclick="selectTradeOffer('${ci.id}','${n}')"><span class="ii-emoji">${ci.emoji}</span><span class="ii-name">${ci.name}</span><span style="font-size:9px;color:rgba(244,238,216,0.35)">${n}</span></div>`;
+  })).join('') || `<div style="font-size:12px;color:rgba(244,238,216,0.3)">Gli altri non hanno oggetti</div>`;
+  // A chi
+  const toBtns=document.getElementById('trade-to-btns');
+  toBtns.innerHTML=others.map((n,i)=>`<button class="tbtn" id="tto-${n}" onclick="selectTradeTo('${n}')">${n}</button>`).join('');
+  openM('m-trade');
+}
+
+function selectTradeOffer(itemId,fromPlayer){tradeOfferItemId=itemId;tradeTo=fromPlayer;document.querySelectorAll('[id^="toff-"]').forEach(el=>el.style.outline='none');const el=document.getElementById('toff-'+itemId);if(el)el.style.outline='2px solid var(--gold)';document.querySelectorAll('[id^="tto-"]').forEach(el=>el.classList.remove('on'));const tb=document.getElementById('tto-'+fromPlayer);if(tb)tb.classList.add('on');}
+function selectTradeTo(name){tradeTo=name;}
+
+async function confirmTrade(){
+  if(!tradeItemId||!tradeOfferItemId||!tradeTo){showToast('Seleziona cosa vuoi in cambio!');return;}
+  const myName=S.names[me];
+  const trade={id:Date.now()+'',from:myName,to:tradeTo,wantItemId:tradeItemId,offerItemId:tradeOfferItemId,status:'pending',date:today()};
+  S.trades=S.trades||[];S.trades.push(trade);
+  closeM('m-trade');showToast('Proposta di scambio inviata! 🔄');
+  await push('proposeTrade',{trade,market:S.market,inventory:S.inventory});
+}
+
+async function acceptTrade(tradeId){
+  const t=(S.trades||[]).find(x=>x.id===tradeId);if(!t)return;
+  const myName=S.names[me];
+  // Scambio oggetti
+  const wantEntry=(S.inventory[myName]||[]).find(x=>x.itemId===t.wantItemId);
+  const offEntry=(S.inventory[t.from]||[]).find(x=>x.itemId===t.offerItemId);
+  if(!wantEntry||!offEntry){showToast('Oggetto non più disponibile');return;}
+  // Aggiorna inventory
+  S.inventory[myName]=(S.inventory[myName]||[]).filter(x=>x.itemId!==t.wantItemId);
+  S.inventory[myName].push({itemId:t.offerItemId,purchasePrice:offEntry.purchasePrice});
+  S.inventory[t.from]=(S.inventory[t.from]||[]).filter(x=>x.itemId!==t.offerItemId);
+  S.inventory[t.from].push({itemId:t.wantItemId,purchasePrice:wantEntry.purchasePrice});
+  // Aggiorna market owners
+  if(S.market[t.wantItemId])S.market[t.wantItemId].owner=t.from;
+  if(S.market[t.offerItemId])S.market[t.offerItemId].owner=myName;
+  // Aggiorna rooms
+  [myName,t.from].forEach(player=>{
+    (S.rooms[player]||[]).forEach(obj=>{
+      if(obj.itemId===t.wantItemId&&player===myName)obj.itemId=t.offerItemId;
+      else if(obj.itemId===t.offerItemId&&player===t.from)obj.itemId=t.wantItemId;
+    });
+  });
+  t.status='accepted';
+  showToast('Scambio completato! 🔄');
+  await push('acceptTrade',{tradeId,market:S.market,inventory:S.inventory,rooms:S.rooms,trades:S.trades});
+}
+
+async function rejectTrade(tradeId){
+  const t=(S.trades||[]).find(x=>x.id===tradeId);if(!t)return;
+  t.status='rejected';
+  showToast('Scambio rifiutato');
+  await push('rejectTrade',{tradeId,trades:S.trades});
+}
+
+// ══ STANZA ══════════════════════════════════════════════════════════════════
+function renderRoom(){
+  const myName = S.names[me];
+
+  viewingRoomOf = viewingRoomOf || myName;
+
+  document.getElementById('room-tabs').innerHTML =
+    S.names.map(n =>
+      `<button class="room-tab${viewingRoomOf===n?' on':''}" onclick="viewRoom('${n}')">${n}</button>`
+    ).join('');
+
+  document.getElementById('room-title').textContent =
+    (viewingRoomOf===myName ? 'La mia' : 'La stanza di ' + viewingRoomOf) + ' stanza';
+
+  const roomItems = (S.rooms && S.rooms[viewingRoomOf]) ? S.rooms[viewingRoomOf] : [];
+
+  const canvas = document.getElementById('room-canvas');
+  canvas.querySelectorAll('.room-obj').forEach(el => el.remove());
+
+  document.getElementById('room-empty').style.display =
+    roomItems.length ? 'none' : 'flex';
+
+  roomItems.forEach(obj => {
+    const cat = CATALOG.find(x => x.id === obj.itemId);
+    if(!cat) return;
+
+    const el = document.createElement('div');
+    el.className = 'room-obj';
+    el.textContent = cat.emoji;
+
+    el.style.left = (obj.x || 10) + '%';
+    el.style.top = (obj.y || 10) + '%';
+
+    el.dataset.itemId = obj.itemId;
+
+    if(viewingRoomOf === myName){
+      makeDraggable(el, obj);
+    }
+
+    canvas.appendChild(el);
+  });
+
+  const inv = document.getElementById('inventory');
+
+  if(viewingRoomOf !== myName){
+    inv.innerHTML = '';
+    return;
+  }
+
+  const myInv = (S.inventory && S.inventory[myName])
+    ? S.inventory[myName]
+    : [];
+
+  const inRoom = new Set(roomItems.map(x => x.itemId));
+
+  if(!myInv.length){
+    inv.innerHTML =
+      `<div class="inv-title">Inventario</div>
+       <div style="font-size:12px;color:rgba(244,238,216,0.25)">
+         Compra oggetti al mercato!
+       </div>`;
+    return;
+  }
+
+  inv.innerHTML =
+    `<div class="inv-title">Inventario — tocca per aggiungere alla stanza</div>
+     <div class="inv-grid">` +
+
+    myInv.map(item => {
+      const cat = CATALOG.find(x => x.id === item.itemId);
+      if(!cat) return '';
+
+      const placed = inRoom.has(item.itemId);
+
+      return `
+        <div class="inv-item${placed?' in-room':''}"
+             onclick="${placed ? '' : `placeItem('${item.itemId}')`}">
+          <span class="ii-emoji">${cat.emoji}</span>
+          <span class="ii-name">
+            ${cat.name}
+            ${placed ? '<br><span style="color:rgba(200,168,75,0.5)">in stanza</span>' : ''}
+          </span>
+        </div>`;
+    }).join('') +
+
+    `</div>`;
+}
+
+function viewRoom(name){viewingRoomOf=name;renderRoom();}
+
+function placeItem(itemId){
+  const myName = S.names[me];
+
+  S.rooms = S.rooms || {};
+  S.inventory = S.inventory || {};
+
+  const room = S.rooms[myName] = S.rooms[myName] || [];
+
+  const inv = (S.inventory[myName] || []).find(x => x.itemId === itemId);
+  if(!inv){
+    showToast('Oggetto non nel tuo inventario');
+    return;
+  }
+
+  if(room.some(x => x.itemId === itemId)) return;
+
+  room.push({
+    itemId,
+    x: 20 + Math.random() * 60,
+    y: 20 + Math.random() * 60
+  });
+
+  renderRoom();
+
+  push('updateRoom', {
+    player: myName,
+    room
+  });
+}
+
+function makeDraggable(el,objRef){
+  const myName=S.names[me];
+  let startX,startY,startLeft,startTop,canvasRect;
+  const getPos=(e)=>e.touches?{x:e.touches[0].clientX,y:e.touches[0].clientY}:{x:e.clientX,y:e.clientY};
+  const onStart=(e)=>{
+    e.preventDefault();
+    canvasRect=document.getElementById('room-canvas').getBoundingClientRect();
+    const pos=getPos(e);startX=pos.x;startY=pos.y;
+    startLeft=parseFloat(el.style.left);startTop=parseFloat(el.style.top);
+    el.classList.add('editing');
+    document.addEventListener('mousemove',onMove);document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('mouseup',onEnd);document.addEventListener('touchend',onEnd);
+  };
+  const onMove=(e)=>{
+    e.preventDefault();const pos=getPos(e);
+    const dx=(pos.x-startX)/canvasRect.width*100;
+    const dy=(pos.y-startY)/canvasRect.height*100;
+    const nx=Math.max(0,Math.min(90,startLeft+dx));
+    const ny=Math.max(0,Math.min(90,startTop+dy));
+    el.style.left=nx+'%';el.style.top=ny+'%';
+    objRef.x=nx;objRef.y=ny;
+  };
+  const onEnd=()=>{
+    el.classList.remove('editing');
+    document.removeEventListener('mousemove',onMove);document.removeEventListener('touchmove',onMove);
+    document.removeEventListener('mouseup',onEnd);document.removeEventListener('touchend',onEnd);
+    push('updateRoom',{player:myName,room:S.rooms[myName]});
+  };
+  el.addEventListener('mousedown',onStart);el.addEventListener('touchstart',onStart,{passive:false});
+}
+
+// ══ CLASSIFICA ══════════════════════════════════════════════════════════════
+function renderClassifica(){
+  document.getElementById('bal-grid').innerHTML=S.names.map((n,i)=>`<div class="bal-card" style="border-color:${UCOLORS[i]}33"><div class="bal-name" style="color:${UCOLORS[i]}">${n}</div><div class="bal-amt" style="color:${UCOLORS[i]}">${S.balances[i]||0}</div><div class="bal-lbl">${CIACCA} Ciacce</div></div>`).join('');
+  const resolved=[...(S.bets||[]),...(S.polls||[])].filter(x=>x.status==='resolved').reverse();
+  document.getElementById('hist-list').innerHTML=!resolved.length?`<p style="font-size:12px;color:rgba(244,238,216,0.25)">Nessuna risolta</p>`:resolved.map(x=>`<div style="padding:7px 0;border-bottom:1px solid rgba(200,168,75,0.08);font-size:12px"><div style="color:var(--ivory2);margin-bottom:2px">${esc(x.text||x.question)}</div><div style="color:var(--gold)">🏆 ${x.winner||x.winningOption}</div></div>`).join('');
+}
+
+// ══ AZIONI SCOMMESSE ════════════════════════════════════════════════════════
+const ADMIN_KEY = "1";
+async function giveCiacce(user, amount){
+  const res = await push('adminGiveCiacce', {
+    adminKey: ADMIN_KEY,
+    user,
+    amount
+  });
+
+  if(!res || !res.ok){
+    showToast('Errore operazione admin');
+    return;
+  }
+
+  S.balances = res.balances;
+  renderClassifica();
+  showToast(`+${amount} Ciacce a ${user}`);
+}
+
+function adminAddCiacce(){
+  const user = prompt("Utente:");
+  const amount = parseInt(prompt("Quantità:") || "0");
+
+  if(!user || !amount) return;
+
+  giveCiacce(user, amount);
+}
+
+async function adminResetCiacce(){
+  const amount = parseInt(prompt("Resetta tutti i saldi a quanto? (default 10):", "10") || "10");
+  if(!confirm(`Sicuro di voler resettare tutte le Ciacce a ${amount}? Questa azione non si può annullare.`)) return;
+
+  const res = await push('adminResetCiacce', {
+    adminKey: ADMIN_KEY,
+    amount
+  });
+
+  if(!res || !res.ok){
+    showToast('Errore operazione admin');
+    return;
+  }
+
+  S.balances = res.balances;
+  renderClassifica();
+  showToast(`Ciacce resettate a ${amount} per tutti`);
+}
+
+async function adminReleaseItem(){
+  if(!confirm('Sbloccare subito un nuovo oggetto al mercato?')) return;
+
+  const res = await push('adminReleaseItem', { adminKey: ADMIN_KEY });
+
+  if(!res || !res.ok){
+    showToast('Errore operazione admin');
+    return;
+  }
+
+  S.marketReleased = res.marketReleased;
+  renderMarket();
+  const item = CATALOG.find(x => x.id === res.released);
+  showToast(item ? `${item.emoji} ${item.name} sbloccato!` : 'Nuovo oggetto sbloccato!');
+}
+
+async function addBet(){
+  const text=document.getElementById('bet-text').value.trim();
+  const amount=parseInt(document.getElementById('bet-amt').value)||0;
+  const prize=document.getElementById('bet-prize').value.trim();
+  if(!text){showToast('Scrivi la scommessa!');return;}
+  if(editingBetId){
+    const b=S.bets.find(x=>x.id===editingBetId);
+    if(b){b.text=text;b.prize=prize;}
+    editingBetId=null;document.querySelector('#m-bet .modal-title').textContent='🎲 Nuovo Cartiglio';
+    closeM('m-bet');showToast('Scommessa modificata!');
+    await push('editBet',{betId:b.id,text,prize,balances:S.balances});return;
+  }
+  if(amount>(S.balances[me]||0)){showToast('Non hai abbastanza Ciacce!');return;}
+  if(amount>0)S.balances[me]-=amount;
+  const bet={id:Date.now()+'',author:S.names[me],text,amount,prize,stakes:[],status:'open',date:today()};
+  S.bets.push(bet);
+  document.getElementById('bet-text').value='';document.getElementById('bet-amt').value='';document.getElementById('bet-prize').value='';
+  closeM('m-bet');showToast('Cartiglio piazzato! 🎲');
+  await push('addBet',{bet,balances:S.balances});
+}
+function editBet(id){const b=S.bets.find(x=>x.id===id);if(!b)return;editingBetId=id;document.getElementById('bet-text').value=b.text;document.getElementById('bet-amt').value=b.amount||0;document.getElementById('bet-prize').value=b.prize||'';document.querySelector('#m-bet .modal-title').textContent='✏️ Modifica Scommessa';openM('m-bet');}
+async function deleteBet(id){if(!confirm('Eliminare?'))return;const b=S.bets.find(x=>x.id===id);if(!b)return;const ai=S.names.indexOf(b.author);if(ai>=0)S.balances[ai]=(S.balances[ai]||0)+(parseInt(b.amount)||0);(b.stakes||[]).forEach(s=>{const i=S.names.indexOf(s.user);if(i>=0)S.balances[i]=(S.balances[i]||0)+(parseInt(s.amount)||0);});S.bets=S.bets.filter(x=>x.id!==id);showToast('Eliminata');await push('deleteBet',{betId:id,balances:S.balances});}
+function openJoin(betId){joinBetId=betId;const b=S.bets.find(x=>x.id===betId);if(!b)return;document.getElementById('join-preview').innerHTML=`<div style="background:rgba(244,238,216,0.04);border-radius:8px;padding:12px;margin-bottom:12px;font-family:'Special Elite',cursive;color:var(--parchment);font-size:13px">"${esc(b.text)}"</div>`;document.getElementById('join-amt').value='';openM('m-join');}
+async function confirmJoin(){const amount=parseInt(document.getElementById('join-amt').value)||0;if(amount<=0){showToast('Inserisci un importo!');return;}if(amount>(S.balances[me]||0)){showToast('Non hai abbastanza Ciacce!');return;}const b=S.bets.find(x=>x.id===joinBetId);if(!b)return;S.balances[me]-=amount;b.stakes=b.stakes||[];b.stakes.push({user:S.names[me],amount});closeM('m-join');showToast('Sfida accettata! ⚔️');await push('joinBet',{betId:joinBetId,stake:{user:S.names[me],amount},balances:S.balances});}
+async function resolveBet(betId,winner){const b=S.bets.find(x=>x.id===betId);if(!b)return;const total=(parseInt(b.amount)||0)+(b.stakes||[]).reduce((a,s)=>a+(parseInt(s.amount)||0),0);const wi=S.names.indexOf(winner);if(wi>=0)S.balances[wi]=(S.balances[wi]||0)+total;b.status='resolved';b.winner=winner;showToast(`🏆 ${winner} vince ${CIACCA}${total}!`);await push('resolveBet',{betId,winner,balances:S.balances});}
+
+// ══ SONDAGGI ════════════════════════════════════════════════════════════════
+function addPollOpt(){pollOpts.push('');renderPollBuilder();}
+function removePollOpt(i){if(pollOpts.length<=2)return;pollOpts.splice(i,1);renderPollBuilder();}
+function renderPollBuilder(){document.getElementById('poll-opts-builder').innerHTML=pollOpts.map((o,i)=>`<div class="poll-opt-builder"><input type="text" value="${esc(o)}" placeholder="Opzione ${i+1}" oninput="pollOpts[${i}]=this.value">${pollOpts.length>2?`<button class="remove-opt" onclick="removePollOpt(${i})">✕</button>`:''}</div>`).join('');}
+async function addPoll(){const q=document.getElementById('poll-q').value.trim();const amt=parseInt(document.getElementById('poll-amt').value)||0;const opts=pollOpts.map(o=>o.trim()).filter(Boolean);if(!q){showToast('Scrivi la domanda!');return;}if(opts.length<2){showToast('Almeno 2 opzioni!');return;}if(amt>(S.balances[me]||0)){showToast('Non hai abbastanza Ciacce!');return;}if(amt>0)S.balances[me]-=amt;const poll={id:Date.now()+'',author:S.names[me],question:q,amount:amt,options:opts,votes:{},status:'open',date:today()};S.polls.push(poll);document.getElementById('poll-q').value='';document.getElementById('poll-amt').value='';pollOpts=['',''];renderPollBuilder();closeM('m-poll');showToast('Sondaggio lanciato! 🗳️');await push('addPoll',{poll,balances:S.balances});}
+async function castVote(pollId,option){const p=S.polls.find(x=>x.id===pollId);if(!p||p.votes[S.names[me]])return;p.votes[S.names[me]]=option;showToast('Voto registrato! 🗳️');await push('votePoll',{pollId,voter:S.names[me],option,balances:S.balances});}
+async function resolvePoll(pollId,winOpt){const p=S.polls.find(x=>x.id===pollId);if(!p)return;const winners=Object.entries(p.votes||{}).filter(([,v])=>v===winOpt).map(([u])=>u);const reward=winners.length>0?Math.floor((parseInt(p.amount)||0)/winners.length):0;winners.forEach(u=>{const i=S.names.indexOf(u);if(i>=0)S.balances[i]=(S.balances[i]||0)+reward;});p.status='resolved';p.winningOption=winOpt;showToast(`🏆 Vince "${winOpt}"!`);await push('resolvePoll',{pollId,winningOption:winOpt,winners,balances:S.balances});}
+
+// ══ RECENSIONI ══════════════════════════════════════════════════════════════
+function setRevType(t){revType=t;document.getElementById('rt-libro').classList.toggle('on',t==='libro');document.getElementById('rt-film').classList.toggle('on',t==='film');}
+function setRevVote(v){revVote=v;for(let i=1;i<=5;i++)document.getElementById('rv'+i).classList.toggle('on',i===v);}
+async function addReview(){
+  const title=document.getElementById('rev-title').value.trim();const text=document.getElementById('rev-text').value.trim();
+  if(!title||!text){showToast('Compila titolo e recensione!');return;}
+  if(editingReviewId){
+    const r=S.reviews.find(x=>x.id===editingReviewId);
+    if(r){r.title=title;r.text=text;r.vote=revVote;r.type=revType;}
+    editingReviewId=null;document.getElementById('m-review-title').textContent='📚 Nuova Recensione';
+    document.getElementById('rev-title').value='';document.getElementById('rev-text').value='';
+    closeM('m-review');showToast('Recensione modificata!');
+    await push('editReview',{reviewId:r.id,title,text,vote:revVote,type:revType,balances:S.balances});return;
+  }
+  S.balances[me]=(S.balances[me]||0)+1;
+  const review={id:Date.now()+'',type:revType,title,text,vote:revVote,author:S.names[me],date:today()};
+  S.reviews.push(review);document.getElementById('rev-title').value='';document.getElementById('rev-text').value='';
+  closeM('m-review');showToast('+1 Ciacca guadagnata! 🪙');
+  await push('addReview',{review,balances:S.balances});
+}
+function editReview(id){const r=S.reviews.find(x=>x.id===id);if(!r)return;editingReviewId=id;setRevType(r.type);setRevVote(r.vote||3);document.getElementById('rev-title').value=r.title;document.getElementById('rev-text').value=r.text;document.getElementById('m-review-title').textContent='✏️ Modifica Recensione';openM('m-review');}
+async function deleteReview(id){if(!confirm('Eliminare? Perderai 1 Ciacca.'))return;const r=S.reviews.find(x=>x.id===id);if(!r)return;const ai=S.names.indexOf(r.author);if(ai>=0)S.balances[ai]=Math.max(0,(S.balances[ai]||0)-1);S.reviews=S.reviews.filter(x=>x.id!==id);showToast('Eliminata');await push('deleteReview',{reviewId:id,balances:S.balances});}
+
+// ══ DIARIO AZIONI ═══════════════════════════════════════════════════════════
+async function addDiary(){
+  const text=document.getElementById('diary-text').value.trim();
+  if(!text){showToast('Scrivi qualcosa!');return;}
+  if(editingDiaryId){
+    const page=(S.diary||[]).find(p=>p.date===editingDiaryDate);
+    if(page){const entry=page.entries.find(e=>e.id===editingDiaryId);if(entry)entry.text=text;}
+    editingDiaryId=null;editingDiaryDate=null;document.getElementById('m-diary-title').textContent='📖 Aggiungi al Diario';
+    document.getElementById('diary-text').value='';closeM('m-diary');showToast('Voce modificata!');renderAll();
+    await push('updateDiaryEntry',{diary:S.diary,balances:S.balances});return;
+  }
+  const entry={id:Date.now()+'',user:S.names[me],time:new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}),text};
+  const date=today();S.balances[me]=(S.balances[me]||0)+1;
+  let page=(S.diary||[]).find(p=>p.date===date);if(!page){page={date,entries:[]};S.diary.push(page);}
+  page.entries.push(entry);document.getElementById('diary-text').value='';closeM('m-diary');showToast('+1 Ciacca! 📖');diaryPage=0;
+  await push('addDiary',{entry:{...entry,date},balances:S.balances});
+}
+function editDiaryEntry(date,id){const page=(S.diary||[]).find(p=>p.date===date);if(!page)return;const entry=page.entries.find(e=>e.id===id);if(!entry)return;editingDiaryId=id;editingDiaryDate=date;document.getElementById('diary-text').value=entry.text||'';document.getElementById('m-diary-title').textContent='✏️ Modifica Voce';openM('m-diary');}
+async function deleteDiaryEntry(date,id){if(!confirm('Eliminare? Perderai 1 Ciacca.'))return;const page=(S.diary||[]).find(p=>p.date===date);if(!page)return;const entry=page.entries.find(e=>e.id===id);if(entry){const ai=S.names.indexOf(entry.user);if(ai>=0)S.balances[ai]=Math.max(0,(S.balances[ai]||0)-1);}page.entries=page.entries.filter(e=>e.id!==id);if(!page.entries.length)S.diary=S.diary.filter(p=>p.date!==date);showToast('Eliminata');await push('deleteDiaryEntry',{date,entryId:id,balances:S.balances});}
+
+// ══ UI ═══════════════════════════════════════════════════════════════════════
+function tab(id,btn){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));document.getElementById('sec-'+id).classList.add('on');btn.classList.add('on');if(id==='stanza')renderRoom();}
+function openM(id){document.getElementById(id).classList.add('open');}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+function fBet(f,btn){betFilter=f;document.querySelectorAll('#sec-scommesse .fchip').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderBets();}
+function fLib(f,btn){libFilter=f;document.querySelectorAll('#sec-libreria .fchip').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderLibrary();}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function showL(msg=''){document.getElementById('loading-txt').textContent=msg;document.getElementById('loading').classList.add('show');}
+function hideL(){document.getElementById('loading').classList.remove('show');}
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
+renderPollBuilder();
+</script>
+</body>
+</html>
