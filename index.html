@@ -452,9 +452,14 @@ textarea{resize:vertical;min-height:64px;line-height:1.5}
     <div class="modal-handle"></div>
     <div class="modal-title" id="m-diary-title">📖 Aggiungi al Diario</div>
     <div class="frow"><label class="flabel">Testo</label><textarea id="diary-text" placeholder="Racconta la giornata..."></textarea></div>
+    <div class="frow">
+      <label class="flabel">Foto (opzionale)</label>
+      <input type="file" id="diary-photo" accept="image/*" onchange="onDiaryPhotoSelected(event)" style="width:100%;color:var(--ink)">
+      <img id="diary-photo-preview" style="display:none;max-width:100%;max-height:160px;border-radius:8px;margin-top:8px;object-fit:cover">
+    </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeM('m-diary');editingDiaryId=null;">Annulla</button>
-      <button class="btn btn-gold" onclick="addDiary()">Aggiungi +1🪙</button>
+      <button class="btn btn-ghost" onclick="closeM('m-diary');editingDiaryId=null;resetDiaryPhoto();">Annulla</button>
+      <button class="btn btn-gold" id="diary-save-btn" onclick="addDiary()">Aggiungi +1🪙</button>
     </div>
   </div>
 </div>
@@ -489,16 +494,16 @@ textarea{resize:vertical;min-height:64px;line-height:1.5}
 // Lista completa con emoji, nome, prezzo base e mese di disponibilità (1-12)
 // Gli oggetti ruotano: ogni mese ne appaiono 4, in copia unica
 const CATALOG = [
-  {id:'marsupio',    emoji:'👜', name:'Marsupio Rosso',         price:8,  month:1},
-  {id:'ombrellino',  emoji:'☂️', name:'Ombrellino a Scatto',    price:6,  month:1},
+  {id:'marsupio',    emoji:'👜', name:'Marsupio rosso del Tosco',         price:8,  month:1},
+  {id:'ombrellino',  emoji:'☂️', name:'Ombrellino a scatto portatile',    price:6,  month:1},
   {id:'briscola',    emoji:'🃏', name:'Carte da Briscola',      price:5,  month:2},
   {id:'cowboy',      emoji:'🤠', name:'Cappello da Cowboy',     price:7,  month:2},
-  {id:'kefia',       emoji:'🧣', name:'Kefia Verde',            price:5,  month:3},
+  {id:'kefia',       emoji:'🧣', name:'Bandana Verde',            price:5,  month:3},
   {id:'pallone',     emoji:'⚽', name:'Pallone da Calcio',      price:6,  month:3},
   {id:'volley',      emoji:'🏐', name:'Pallone da Volley',      price:6,  month:4},
   {id:'bici-rossa',  emoji:'🚲', name:'Bici Rossa da Corsa',   price:10, month:4},
   {id:'bici-blu',    emoji:'🚵', name:'Bici Azzurra da Corsa', price:10, month:5},
-  {id:'chitarra',    emoji:'🎸', name:'Chitarra Acustica',      price:9,  month:5},
+  {id:'chitarra',    emoji:'🎸', name:'Chitarra classica',      price:9,  month:5},
   {id:'zaino',       emoji:'🎒', name:'Zaino da Escursione',    price:7,  month:6},
   {id:'tenda',       emoji:'⛺', name:'Tenda da Campeggio',     price:8,  month:6},
   {id:'pallanuoto',  emoji:'🤽', name:'Cuffia da Pallanuoto',   price:5,  month:7},
@@ -776,6 +781,7 @@ function renderDiary(){
         ${e.user===S.names[me]?`<button onclick="editDiaryEntry('${date}','${e.id}')" style="background:none;border:none;color:rgba(200,168,75,0.5);cursor:pointer;font-size:12px">✏️</button><button onclick="deleteDiaryEntry('${date}','${e.id}')" style="background:none;border:none;color:rgba(139,32,32,0.5);cursor:pointer;font-size:12px">🗑</button>`:''}
       </div>
       ${e.text?`<div class="diary-entry-text" style="color:var(--ink)">${esc(e.text)}</div>`:''}
+      ${e.image?`<img src="${e.image}" loading="lazy" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-top:8px" onerror="this.style.display='none'">`:''}
     </div>`;
   }).join('');
 }
@@ -1344,23 +1350,90 @@ function editReview(id){const r=S.reviews.find(x=>x.id===id);if(!r)return;editin
 async function deleteReview(id){if(!confirm('Eliminare? Perderai 1 Ciacca.'))return;const r=S.reviews.find(x=>x.id===id);if(!r)return;const ai=S.names.indexOf(r.author);if(ai>=0)S.balances[ai]=Math.max(0,(S.balances[ai]||0)-1);S.reviews=S.reviews.filter(x=>x.id!==id);showToast('Eliminata');await push('deleteReview',{reviewId:id,balances:S.balances});}
 
 // ══ DIARIO AZIONI ═══════════════════════════════════════════════════════════
+let diaryPhotoDataUrl=null; // base64 compressa, pronta per l'upload
+
+// Ridimensiona/comprime l'immagine nel browser PRIMA di inviarla: essenziale,
+// perché una foto originale (spesso 2-5 MB) è troppo pesante da mandare allo
+// script e da salvare. Qui la riportiamo a max 1000px di lato e qualità 0.7,
+// che per una foto da diario è più che sufficiente (di solito 50-150 KB).
+function compressImage(file,maxSide,quality){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>h&&w>maxSide){h=Math.round(h*maxSide/w);w=maxSide;}
+        else if(h>=w&&h>maxSide){w=Math.round(w*maxSide/h);h=maxSide;}
+        const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg',quality));
+      };
+      img.onerror=reject;img.src=e.target.result;
+    };
+    reader.onerror=reject;reader.readAsDataURL(file);
+  });
+}
+
+async function onDiaryPhotoSelected(ev){
+  const file=ev.target.files[0];
+  if(!file)return;
+  try{
+    diaryPhotoDataUrl=await compressImage(file,1000,0.7);
+    const prev=document.getElementById('diary-photo-preview');
+    prev.src=diaryPhotoDataUrl;prev.style.display='block';
+  }catch(e){showToast('Impossibile leggere la foto');}
+}
+
+function resetDiaryPhoto(){
+  diaryPhotoDataUrl=null;
+  const inp=document.getElementById('diary-photo');if(inp)inp.value='';
+  const prev=document.getElementById('diary-photo-preview');if(prev){prev.style.display='none';prev.src='';}
+}
+
+// Carica la foto su Drive tramite lo script (azione dedicata, via POST perché
+// il base64 è troppo grande per stare in una URL). Ritorna il link da salvare
+// nel diario, oppure null se non c'è foto o qualcosa va storto.
+async function uploadDiaryPhoto(){
+  if(!diaryPhotoDataUrl||isDemo)return null;
+  try{
+    const res=await fetch(scriptUrl,{
+      method:'POST',
+      body:JSON.stringify({action:'uploadImage',imageBase64:diaryPhotoDataUrl,mimeType:'image/jpeg',fileName:'diario_'+Date.now()+'.jpg'})
+    });
+    const data=await res.json();
+    if(data.ok)return data.url;
+    showToast('Foto non caricata: '+(data.error||'errore sconosciuto'));
+    return null;
+  }catch(e){
+    showToast('⚠️ Foto non caricata (rete)');
+    return null;
+  }
+}
+
 async function addDiary(){
   const text=document.getElementById('diary-text').value.trim();
   if(!text){showToast('Scrivi qualcosa!');return;}
+  const btn=document.getElementById('diary-save-btn');
+  btn.disabled=true;btn.textContent='Salvo...';
+  const imageUrl=await uploadDiaryPhoto();
+  btn.disabled=false;
   if(editingDiaryId){
     const page=(S.diary||[]).find(p=>p.date===editingDiaryDate);
-    if(page){const entry=page.entries.find(e=>e.id===editingDiaryId);if(entry)entry.text=text;}
+    if(page){const entry=page.entries.find(e=>e.id===editingDiaryId);if(entry){entry.text=text;if(imageUrl)entry.image=imageUrl;}}
     editingDiaryId=null;editingDiaryDate=null;document.getElementById('m-diary-title').textContent='📖 Aggiungi al Diario';
-    document.getElementById('diary-text').value='';closeM('m-diary');showToast('Voce modificata!');renderAll();
+    document.getElementById('diary-text').value='';resetDiaryPhoto();closeM('m-diary');showToast('Voce modificata!');renderAll();
     await push('updateDiaryEntry',{diary:S.diary,balances:S.balances});return;
   }
+  btn.textContent='Aggiungi +1🪙';
   const entry={id:Date.now()+'',user:S.names[me],time:new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}),text};
+  if(imageUrl)entry.image=imageUrl;
   const date=today();S.balances[me]=(S.balances[me]||0)+1;
   let page=(S.diary||[]).find(p=>p.date===date);if(!page){page={date,entries:[]};S.diary.push(page);}
-  page.entries.push(entry);document.getElementById('diary-text').value='';closeM('m-diary');showToast('+1 Ciacca! 📖');diaryPage=0;
+  page.entries.push(entry);document.getElementById('diary-text').value='';resetDiaryPhoto();closeM('m-diary');showToast('+1 Ciacca! 📖');diaryPage=0;
   await push('addDiary',{entry:{...entry,date},balances:S.balances});
 }
-function editDiaryEntry(date,id){const page=(S.diary||[]).find(p=>p.date===date);if(!page)return;const entry=page.entries.find(e=>e.id===id);if(!entry)return;editingDiaryId=id;editingDiaryDate=date;document.getElementById('diary-text').value=entry.text||'';document.getElementById('m-diary-title').textContent='✏️ Modifica Voce';openM('m-diary');}
+function editDiaryEntry(date,id){const page=(S.diary||[]).find(p=>p.date===date);if(!page)return;const entry=page.entries.find(e=>e.id===id);if(!entry)return;editingDiaryId=id;editingDiaryDate=date;resetDiaryPhoto();document.getElementById('diary-text').value=entry.text||'';document.getElementById('m-diary-title').textContent='✏️ Modifica Voce';openM('m-diary');}
 async function deleteDiaryEntry(date,id){if(!confirm('Eliminare? Perderai 1 Ciacca.'))return;const page=(S.diary||[]).find(p=>p.date===date);if(!page)return;const entry=page.entries.find(e=>e.id===id);if(entry){const ai=S.names.indexOf(entry.user);if(ai>=0)S.balances[ai]=Math.max(0,(S.balances[ai]||0)-1);}page.entries=page.entries.filter(e=>e.id!==id);if(!page.entries.length)S.diary=S.diary.filter(p=>p.date!==date);showToast('Eliminata');await push('deleteDiaryEntry',{date,entryId:id,balances:S.balances});}
 
 // ══ UI ═══════════════════════════════════════════════════════════════════════
