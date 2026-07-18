@@ -320,6 +320,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.5}
         <div><div class="sec-title">Diario</div><div class="sec-sub">Un giorno, una pagina</div></div>
         <button class="btn btn-gold btn-sm" onclick="openM('m-diary')">+ Aggiungi</button>
       </div>
+      <div id="bereal-banner"></div>
       <div class="diary-wrap">
         <div class="diary-nav">
           <button class="page-btn" id="prev-btn" onclick="prevPage()">‹</button>
@@ -423,6 +424,11 @@ textarea{resize:vertical;min-height:64px;line-height:1.5}
     <div class="frow"><label class="flabel">Tipo</label><div class="trow"><button class="tbtn on" id="rt-libro" onclick="setRevType('libro')">📚 Libro</button><button class="tbtn" id="rt-film" onclick="setRevType('film')">🎬 Film</button></div></div>
     <div class="frow"><label class="flabel">Titolo</label><input type="text" id="rev-title" placeholder="Titolo"></div>
     <div class="frow"><label class="flabel">Recensione (1 riga)</label><input type="text" id="rev-text" placeholder="La tua impressione..."></div>
+    <div class="frow">
+      <label class="flabel">Copertina (opzionale)</label>
+      <input type="file" id="rev-cover" accept="image/*" onchange="onReviewCoverSelected(event)" style="width:100%;color:var(--ink)">
+      <img id="rev-cover-preview" style="display:none;max-width:100%;max-height:160px;border-radius:8px;margin-top:8px;object-fit:contain">
+    </div>
     <div class="frow"><label class="flabel">Voto</label>
       <div class="trow">
         <button class="tbtn" id="rv1" onclick="setRevVote(1)">⭐</button>
@@ -433,8 +439,8 @@ textarea{resize:vertical;min-height:64px;line-height:1.5}
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeM('m-review');editingReviewId=null;">Annulla</button>
-      <button class="btn btn-gold" onclick="addReview()">Pubblica +1🪙</button>
+      <button class="btn btn-ghost" onclick="closeM('m-review');editingReviewId=null;resetReviewCover();">Annulla</button>
+      <button class="btn btn-gold" id="rev-save-btn" onclick="addReview()">Pubblica +1🪙</button>
     </div>
   </div>
 </div>
@@ -529,6 +535,7 @@ let S = {
   rooms:{},       // {playerName: [{itemId, x, y}]}
   trades:[],      // proposte di scambio pendenti
   marketReleased:[], // [{itemId, date}] oggetti sbloccati dal rilascio settimanale
+  bereal:{},      // stato della sfida foto del giorno
 };
 let me = null;
 let scriptUrl = '';
@@ -592,6 +599,7 @@ async function sync(){
       S.names=data.names||S.names;S.balances=data.balances||S.balances;
       S.bets=data.bets||[];S.polls=data.polls||[];S.reviews=data.reviews||[];S.diary=data.diary||[];
       S.market=data.market||{};S.inventory=data.inventory||{};S.rooms=data.rooms||{};S.trades=data.trades||[];S.marketReleased=data.marketReleased||[];
+      S.bereal=data.bereal||{};
       localStorage.setItem('ciacce_names',JSON.stringify(S.names));
       localStorage.setItem('ciacce_cache',JSON.stringify({balances:S.balances,bets:S.bets,polls:S.polls,reviews:S.reviews,diary:S.diary,market:S.market,inventory:S.inventory,rooms:S.rooms,trades:S.trades,marketReleased:S.marketReleased}));
       lastSync=new Date();renderAll();
@@ -732,7 +740,7 @@ function renderLibrary(){
   const shelfHTML=(list,icon,label)=>{
     if(!list.length)return'';
     const books=list.map(r=>`<div class="book" onclick="openBook('${r.id}')">
-      <div class="book-cover" style="background:${shelfColor(r.id)}">${icon}</div>
+      <div class="book-cover" style="background:${shelfColor(r.id)}">${r.cover?`<img src="${r.cover}" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`:icon}</div>
       <div class="book-spine">${r.title.substring(0,14)}</div>
       <div class="book-stars">${'⭐'.repeat(r.vote||3)}</div>
     </div>`).join('');
@@ -746,6 +754,7 @@ function openBook(id){
   const r=(S.reviews||[]).find(x=>x.id===id);if(!r)return;
   const ai=S.names.indexOf(r.author);
   document.getElementById('book-detail-content').innerHTML=`
+    ${r.cover?`<img src="${r.cover}" loading="lazy" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-bottom:12px" onerror="this.style.display='none'">`:''}
     <div style="font-family:'Playfair Display',serif;font-size:17px;color:var(--gold);margin-bottom:4px">${esc(r.title)}</div>
     <div style="font-size:11px;color:rgba(200,168,75,0.5);margin-bottom:8px">${r.type==='libro'?'📚 Libro':'🎬 Film'}</div>
     <div style="font-size:14px;color:var(--gold);margin-bottom:10px">${'⭐'.repeat(r.vote||3)}</div>
@@ -759,8 +768,19 @@ function openBook(id){
 }
 
 // ══ DIARIO ══════════════════════════════════════════════════════════════════
-function buildDiaryPages(){const dates=[...new Set((S.diary||[]).map(p=>p.date))].sort((a,b)=>b.localeCompare(a));diaryPages=dates;if(diaryPage>=diaryPages.length&&diaryPages.length>0)diaryPage=0;}
+// Le date sono salvate come stringa "GG/MM/AAAA" (formato it-IT). Un confronto
+// alfabetico su questa stringa NON corrisponde all'ordine cronologico (es.
+// "01/08" risulta prima di "29/07" alfabeticamente, ma è una data successiva)
+// — è la causa del bug per cui la prima pagina restava sempre la più vecchia.
+// Qui la convertiamo in un vero oggetto Date prima di ordinare.
+function parseItDate(s){
+  const parts=String(s||'').split('/');
+  const d=parseInt(parts[0],10)||1,m=(parseInt(parts[1],10)||1)-1,y=parseInt(parts[2],10)||1970;
+  return new Date(y,m,d);
+}
+function buildDiaryPages(){const dates=[...new Set((S.diary||[]).map(p=>p.date))].sort((a,b)=>parseItDate(b)-parseItDate(a));diaryPages=dates;if(diaryPage>=diaryPages.length&&diaryPages.length>0)diaryPage=0;}
 function renderDiary(){
+  renderBerealBanner();
   buildDiaryPages();
   const pe=document.getElementById('diary-page'),ie=document.getElementById('page-info'),pb=document.getElementById('prev-btn'),nb=document.getElementById('next-btn'),de=document.getElementById('page-dots');
   if(!diaryPages.length){pe.innerHTML=`<div class="diary-empty"><span style="font-size:36px">📖</span><span>Il diario è vuoto</span></div>`;ie.textContent='–';pb.disabled=nb.disabled=true;de.innerHTML='';return;}
@@ -788,6 +808,30 @@ function renderDiary(){
 function prevPage(){if(diaryPage>0){diaryPage--;renderDiary();}}
 function nextPage(){if(diaryPage<diaryPages.length-1){diaryPage++;renderDiary();}}
 function goPage(i){diaryPage=i;renderDiary();}
+
+// ══ SFIDA BEREAL ═══════════════════════════════════════════════════════════
+function renderBerealBanner(){
+  const el=document.getElementById('bereal-banner');if(!el)return;
+  const b=S.bereal||{};
+  const myName=S.names[me];
+  if(!b.deadline){el.innerHTML='';return;}
+  const now=Date.now();
+  const deadline=new Date(b.deadline).getTime();
+  const claimed=(b.claimed||{})[myName];
+  if(now>deadline){
+    el.innerHTML='';return;
+  }
+  const minsLeft=Math.max(0,Math.ceil((deadline-now)/60000));
+  if(claimed){
+    el.innerHTML=`<div class="panel" style="border-color:rgba(100,200,100,0.4);text-align:center;font-size:12px;color:#9fd673">✅ Ciacca bonus già incassata per questa sfida!</div>`;
+  } else {
+    el.innerHTML=`<div class="panel" style="border-color:var(--gold);text-align:center">
+      <div style="font-size:13px;color:var(--gold);font-weight:700">📸 Momento Ciacce!</div>
+      <div style="font-size:11px;color:rgba(244,238,216,0.6);margin:4px 0 8px">Carica una foto ora e guadagna 🪙1 extra — ${minsLeft} min rimasti</div>
+      <button class="btn btn-gold btn-sm" onclick="openM('m-diary')">📷 Carica foto</button>
+    </div>`;
+  }
+}
 
 // ══ MERCATO ═════════════════════════════════════════════════════════════════
 // Gli oggetti disponibili sono definiti nel CATALOG qui sopra (il "pool").
@@ -841,25 +885,57 @@ function renderMarket(){
     </div>`;
   }).join('');
 
-  // Sezione scambi pendenti
-  const myTrades=(S.trades||[]).filter(t=>t.to===myName&&t.status==='pending');
+  // Sezione scambi — filtriamo via quelli scaduti (finestra di 2 giorni dalla proposta)
+  const nowTs=Date.now();
+  const activeTrades=(S.trades||[]).filter(t=>{
+    if(t.status==='accepted'||t.status==='rejected')return false;
+    if(t.expiresAt&&nowTs>new Date(t.expiresAt).getTime())return false;
+    return true;
+  });
+  const incoming=activeTrades.filter(t=>t.to===myName&&t.status==='pending');       // devo rispondere io (accetta/rifiuta/contratta)
+  const counters=activeTrades.filter(t=>t.from===myName&&t.status==='countered');   // l'altro ha contrattato, devo rispondere io
   const tradeSec=document.getElementById('trade-section');
-  if(myTrades.length){
-    tradeSec.innerHTML=`<div class="panel"><div class="panel-title">🔄 Scambi in arrivo</div>`+
-    myTrades.map(t=>{
+  let tradeHtml='';
+  if(incoming.length){
+    tradeHtml+=`<div class="panel"><div class="panel-title">🔄 Scambi in arrivo</div>`+
+    incoming.map(t=>{
       const offItem=CATALOG.find(x=>x.id===t.offerItemId);
       const wantItem=CATALOG.find(x=>x.id===t.wantItemId);
       if(!offItem||!wantItem)return'';
       return`<div class="trade-card">
         <div class="trade-emoji">${offItem.emoji}</div>
-        <div class="trade-info"><div class="trade-name">${offItem.name}</div><div class="trade-from">${t.from} vuole il tuo ${wantItem.emoji} ${wantItem.name}</div></div>
-        <div class="trade-actions">
-          <button class="btn btn-gold btn-sm" onclick="acceptTrade('${t.id}')">✓</button>
-          <button class="btn btn-ghost btn-sm" onclick="rejectTrade('${t.id}')">✕</button>
+        <div class="trade-info"><div class="trade-name">${offItem.name}</div><div class="trade-from">${t.from} vuole il tuo ${wantItem.emoji} ${wantItem.name}</div><div class="trade-from" style="opacity:0.6">Scade il ${new Date(t.expiresAt).toLocaleDateString('it-IT')}</div></div>
+        <div class="trade-actions" style="flex-direction:column;gap:4px">
+          <button class="btn btn-gold btn-sm" onclick="acceptTrade('${t.id}')">✓ Accetta</button>
+          <button class="btn btn-outline btn-sm" onclick="counterTrade('${t.id}')">💰 Contratta</button>
+          <button class="btn btn-ghost btn-sm" onclick="rejectTrade('${t.id}')">✕ Rifiuta</button>
         </div>
       </div>`;
     }).join('')+`</div>`;
-  } else tradeSec.innerHTML='';
+  }
+  if(counters.length){
+    tradeHtml+=`<div class="panel"><div class="panel-title">💰 Contro-offerte per te</div>`+
+    counters.map(t=>{
+      const offItem=CATALOG.find(x=>x.id===t.offerItemId);
+      const wantItem=CATALOG.find(x=>x.id===t.wantItemId);
+      if(!offItem||!wantItem)return'';
+      return`<div class="trade-card">
+        <div class="trade-emoji">${wantItem.emoji}</div>
+        <div class="trade-info"><div class="trade-name">${t.to} vuole il tuo ${offItem.emoji} ${offItem.name}</div><div class="trade-from">In cambio del suo ${wantItem.name} + ${CIACCA}${t.counterCiacce||0} da te</div></div>
+        <div class="trade-actions" style="flex-direction:column;gap:4px">
+          <button class="btn btn-gold btn-sm" onclick="acceptTrade('${t.id}')">✓ Accetta</button>
+          <button class="btn btn-ghost btn-sm" onclick="rejectTrade('${t.id}')">✕ Rifiuta</button>
+        </div>
+      </div>`;
+    }).join('')+`</div>`;
+  }
+  tradeSec.innerHTML=tradeHtml;
+
+  // Ripulisce (localmente) gli scambi scaduti/non più attivi che sono ancora
+  // marcati 'pending'/'countered' — evita che restino a intasare il DB.
+  (S.trades||[]).forEach(t=>{
+    if((t.status==='pending'||t.status==='countered')&&t.expiresAt&&nowTs>new Date(t.expiresAt).getTime())t.status='expired';
+  });
 
   // Lista di tutti gli oggetti già messi sul mercato (di ogni mese) e venduti
   const soldEntries = Object.entries(mkt).filter(([,e]) => e && e.owner);
@@ -1031,7 +1107,8 @@ function selectTradeTo(name){tradeTo=name;}
 async function confirmTrade(){
   if(!tradeItemId||!tradeOfferItemId||!tradeTo){showToast('Seleziona cosa vuoi in cambio!');return;}
   const myName=S.names[me];
-  const trade={id:Date.now()+'',from:myName,to:tradeTo,wantItemId:tradeItemId,offerItemId:tradeOfferItemId,status:'pending',date:today()};
+  const expiresAt=new Date(Date.now()+2*24*60*60*1000).toISOString(); // finestra di 2 giorni per rispondere
+  const trade={id:Date.now()+'',from:myName,to:tradeTo,wantItemId:tradeItemId,offerItemId:tradeOfferItemId,status:'pending',date:today(),expiresAt,counterCiacce:0};
   S.trades=S.trades||[];S.trades.push(trade);
   closeM('m-trade');showToast('Proposta di scambio inviata! 🔄');
   await push('proposeTrade',{trade,market:S.market,inventory:S.inventory});
@@ -1040,28 +1117,58 @@ async function confirmTrade(){
 async function acceptTrade(tradeId){
   const t=(S.trades||[]).find(x=>x.id===tradeId);if(!t)return;
   const myName=S.names[me];
-  // Scambio oggetti
-  const wantEntry=(S.inventory[myName]||[]).find(x=>x.itemId===t.wantItemId);
+  const isCounterAccept = t.status==='countered'; // sto accettando la contro-offerta che l'altro mi ha fatto
+  // NB: i ruoli sono sempre riferiti a t.from/t.to, indipendentemente da chi
+  // sta accettando ora (che può essere l'uno o l'altro a seconda dello stato).
+  const extra = isCounterAccept ? (parseInt(t.counterCiacce)||0) : 0;
+  if(isCounterAccept && myName!==t.from){showToast('Non è il tuo turno di rispondere');return;}
+  if(!isCounterAccept && myName!==t.to){showToast('Non è il tuo turno di rispondere');return;}
+  if(extra>0 && (S.balances[me]||0)<extra){showToast('Non hai abbastanza Ciacce per la contro-offerta!');return;}
+
+  // Scambio oggetti (t.to possiede wantItemId, t.from possiede offerItemId)
+  const wantEntry=(S.inventory[t.to]||[]).find(x=>x.itemId===t.wantItemId);
   const offEntry=(S.inventory[t.from]||[]).find(x=>x.itemId===t.offerItemId);
   if(!wantEntry||!offEntry){showToast('Oggetto non più disponibile');return;}
   // Aggiorna inventory
-  S.inventory[myName]=(S.inventory[myName]||[]).filter(x=>x.itemId!==t.wantItemId);
-  S.inventory[myName].push({itemId:t.offerItemId,purchasePrice:offEntry.purchasePrice});
+  S.inventory[t.to]=(S.inventory[t.to]||[]).filter(x=>x.itemId!==t.wantItemId);
+  S.inventory[t.to].push({itemId:t.offerItemId,purchasePrice:offEntry.purchasePrice});
   S.inventory[t.from]=(S.inventory[t.from]||[]).filter(x=>x.itemId!==t.offerItemId);
   S.inventory[t.from].push({itemId:t.wantItemId,purchasePrice:wantEntry.purchasePrice});
   // Aggiorna market owners
   if(S.market[t.wantItemId])S.market[t.wantItemId].owner=t.from;
-  if(S.market[t.offerItemId])S.market[t.offerItemId].owner=myName;
+  if(S.market[t.offerItemId])S.market[t.offerItemId].owner=t.to;
   // Aggiorna rooms
-  [myName,t.from].forEach(player=>{
+  [t.to,t.from].forEach(player=>{
     (S.rooms[player]||[]).forEach(obj=>{
-      if(obj.itemId===t.wantItemId&&player===myName)obj.itemId=t.offerItemId;
+      if(obj.itemId===t.wantItemId&&player===t.to)obj.itemId=t.offerItemId;
       else if(obj.itemId===t.offerItemId&&player===t.from)obj.itemId=t.wantItemId;
     });
   });
+  // Trasferimento Ciacce extra concordato nella contro-offerta (da 'from' a 'to')
+  if(extra>0){
+    const fi=S.names.indexOf(t.from),ti=S.names.indexOf(t.to);
+    if(fi>=0)S.balances[fi]=(S.balances[fi]||0)-extra;
+    if(ti>=0)S.balances[ti]=(S.balances[ti]||0)+extra;
+  }
   t.status='accepted';
-  showToast('Scambio completato! 🔄');
-  await push('acceptTrade',{tradeId,market:S.market,inventory:S.inventory,rooms:S.rooms,trades:S.trades});
+  showToast(extra>0?`Scambio completato! 🔄 (${CIACCA}${extra} trasferite)`:'Scambio completato! 🔄');
+  const res=await push('acceptTrade',{tradeId,market:S.market,inventory:S.inventory,rooms:S.rooms,trades:S.trades,balances:S.balances});
+  if(res?.balances)S.balances=res.balances;
+}
+
+// Apre un prompt semplice per chiedere Ciacce extra come contro-offerta,
+// prima di accettare la proposta di scambio ricevuta.
+async function counterTrade(tradeId){
+  const t=(S.trades||[]).find(x=>x.id===tradeId);if(!t)return;
+  const amountStr=prompt('Quante Ciacce extra vuoi chiedere in cambio (oltre allo scambio oggetti)? Scrivi 0 per nessuna.','0');
+  if(amountStr===null)return;
+  const amount=parseInt(amountStr)||0;
+  if(amount<0){showToast('Importo non valido');return;}
+  t.status='countered';t.counterCiacce=amount;
+  t.expiresAt=new Date(Date.now()+2*24*60*60*1000).toISOString(); // riparte la finestra di 2 giorni
+  showToast('Contro-offerta inviata! 💰');
+  renderMarket();
+  await push('counterTrade',{tradeId,counterCiacce:amount,expiresAt:t.expiresAt,trades:S.trades});
 }
 
 async function rejectTrade(tradeId){
@@ -1327,26 +1434,46 @@ async function castVote(pollId,option){const p=S.polls.find(x=>x.id===pollId);if
 async function resolvePoll(pollId,winOpt){const p=S.polls.find(x=>x.id===pollId);if(!p)return;const winners=Object.entries(p.votes||{}).filter(([,v])=>v===winOpt).map(([u])=>u);const reward=winners.length>0?Math.floor((parseInt(p.amount)||0)/winners.length):0;winners.forEach(u=>{const i=S.names.indexOf(u);if(i>=0)S.balances[i]=(S.balances[i]||0)+reward;});p.status='resolved';p.winningOption=winOpt;showToast(`🏆 Vince "${winOpt}"!`);await push('resolvePoll',{pollId,winningOption:winOpt,winners,balances:S.balances});}
 
 // ══ RECENSIONI ══════════════════════════════════════════════════════════════
+let reviewCoverDataUrl=null;
+async function onReviewCoverSelected(ev){
+  const file=ev.target.files[0];
+  if(!file)return;
+  try{
+    reviewCoverDataUrl=await compressImage(file,700,0.75); // le copertine sono piccole, bastano 700px
+    const prev=document.getElementById('rev-cover-preview');
+    prev.src=reviewCoverDataUrl;prev.style.display='block';
+  }catch(e){showToast('Impossibile leggere la copertina');}
+}
+function resetReviewCover(){
+  reviewCoverDataUrl=null;
+  const inp=document.getElementById('rev-cover');if(inp)inp.value='';
+  const prev=document.getElementById('rev-cover-preview');if(prev){prev.style.display='none';prev.src='';}
+}
 function setRevType(t){revType=t;document.getElementById('rt-libro').classList.toggle('on',t==='libro');document.getElementById('rt-film').classList.toggle('on',t==='film');}
 function setRevVote(v){revVote=v;for(let i=1;i<=5;i++)document.getElementById('rv'+i).classList.toggle('on',i===v);}
 async function addReview(){
   const title=document.getElementById('rev-title').value.trim();const text=document.getElementById('rev-text').value.trim();
   if(!title||!text){showToast('Compila titolo e recensione!');return;}
+  const btn=document.getElementById('rev-save-btn');
+  btn.disabled=true;const oldLabel=btn.textContent;btn.textContent='Salvo...';
+  const coverUrl=await uploadPhoto(reviewCoverDataUrl,'cover');
+  btn.disabled=false;btn.textContent=oldLabel;
   if(editingReviewId){
     const r=S.reviews.find(x=>x.id===editingReviewId);
-    if(r){r.title=title;r.text=text;r.vote=revVote;r.type=revType;}
+    if(r){r.title=title;r.text=text;r.vote=revVote;r.type=revType;if(coverUrl)r.cover=coverUrl;}
     editingReviewId=null;document.getElementById('m-review-title').textContent='📚 Nuova Recensione';
-    document.getElementById('rev-title').value='';document.getElementById('rev-text').value='';
-    closeM('m-review');showToast('Recensione modificata!');
-    await push('editReview',{reviewId:r.id,title,text,vote:revVote,type:revType,balances:S.balances});return;
+    document.getElementById('rev-title').value='';document.getElementById('rev-text').value='';resetReviewCover();
+    closeM('m-review');showToast('Recensione modificata!');renderAll();
+    await push('editReview',{reviewId:r.id,title,text,vote:revVote,type:revType,cover:r.cover,balances:S.balances});return;
   }
   S.balances[me]=(S.balances[me]||0)+1;
   const review={id:Date.now()+'',type:revType,title,text,vote:revVote,author:S.names[me],date:today()};
-  S.reviews.push(review);document.getElementById('rev-title').value='';document.getElementById('rev-text').value='';
+  if(coverUrl)review.cover=coverUrl;
+  S.reviews.push(review);document.getElementById('rev-title').value='';document.getElementById('rev-text').value='';resetReviewCover();
   closeM('m-review');showToast('+1 Ciacca guadagnata! 🪙');
   await push('addReview',{review,balances:S.balances});
 }
-function editReview(id){const r=S.reviews.find(x=>x.id===id);if(!r)return;editingReviewId=id;setRevType(r.type);setRevVote(r.vote||3);document.getElementById('rev-title').value=r.title;document.getElementById('rev-text').value=r.text;document.getElementById('m-review-title').textContent='✏️ Modifica Recensione';openM('m-review');}
+function editReview(id){const r=S.reviews.find(x=>x.id===id);if(!r)return;editingReviewId=id;setRevType(r.type);setRevVote(r.vote||3);document.getElementById('rev-title').value=r.title;document.getElementById('rev-text').value=r.text;resetReviewCover();if(r.cover){const prev=document.getElementById('rev-cover-preview');prev.src=r.cover;prev.style.display='block';}document.getElementById('m-review-title').textContent='✏️ Modifica Recensione';openM('m-review');}
 async function deleteReview(id){if(!confirm('Eliminare? Perderai 1 Ciacca.'))return;const r=S.reviews.find(x=>x.id===id);if(!r)return;const ai=S.names.indexOf(r.author);if(ai>=0)S.balances[ai]=Math.max(0,(S.balances[ai]||0)-1);S.reviews=S.reviews.filter(x=>x.id!==id);showToast('Eliminata');await push('deleteReview',{reviewId:id,balances:S.balances});}
 
 // ══ DIARIO AZIONI ═══════════════════════════════════════════════════════════
@@ -1391,15 +1518,16 @@ function resetDiaryPhoto(){
   const prev=document.getElementById('diary-photo-preview');if(prev){prev.style.display='none';prev.src='';}
 }
 
-// Carica la foto su Drive tramite lo script (azione dedicata, via POST perché
-// il base64 è troppo grande per stare in una URL). Ritorna il link da salvare
-// nel diario, oppure null se non c'è foto o qualcosa va storto.
-async function uploadDiaryPhoto(){
-  if(!diaryPhotoDataUrl||isDemo)return null;
+// Carica una foto su Drive tramite lo script (azione dedicata, via POST perché
+// il base64 è troppo grande per stare in una URL). Ritorna l'url pubblico,
+// oppure null se non c'è foto o qualcosa va storto. 'prefix' distingue le foto
+// del diario da quelle delle copertine solo nel nome del file su Drive.
+async function uploadPhoto(dataUrl,prefix){
+  if(!dataUrl||isDemo)return null;
   try{
     const res=await fetch(scriptUrl,{
       method:'POST',
-      body:JSON.stringify({action:'uploadImage',imageBase64:diaryPhotoDataUrl,mimeType:'image/jpeg',fileName:'diario_'+Date.now()+'.jpg'})
+      body:JSON.stringify({action:'uploadImage',imageBase64:dataUrl,mimeType:'image/jpeg',fileName:prefix+'_'+Date.now()+'.jpg'})
     });
     const data=await res.json();
     if(data.ok)return data.url;
@@ -1410,6 +1538,7 @@ async function uploadDiaryPhoto(){
     return null;
   }
 }
+async function uploadDiaryPhoto(){ return uploadPhoto(diaryPhotoDataUrl,'diario'); }
 
 async function addDiary(){
   const text=document.getElementById('diary-text').value.trim();
@@ -1431,7 +1560,10 @@ async function addDiary(){
   const date=today();S.balances[me]=(S.balances[me]||0)+1;
   let page=(S.diary||[]).find(p=>p.date===date);if(!page){page={date,entries:[]};S.diary.push(page);}
   page.entries.push(entry);document.getElementById('diary-text').value='';resetDiaryPhoto();closeM('m-diary');showToast('+1 Ciacca! 📖');diaryPage=0;
-  await push('addDiary',{entry:{...entry,date},balances:S.balances});
+  const res=await push('addDiary',{entry:{...entry,date},balances:S.balances});
+  if(res?.berealBonus){S.bereal.claimed=S.bereal.claimed||{};S.bereal.claimed[S.names[me]]=true;showToast('📸 +1 Ciacca bonus BeReal!');}
+  if(res?.balances)S.balances=res.balances;
+  renderAll();
 }
 function editDiaryEntry(date,id){const page=(S.diary||[]).find(p=>p.date===date);if(!page)return;const entry=page.entries.find(e=>e.id===id);if(!entry)return;editingDiaryId=id;editingDiaryDate=date;resetDiaryPhoto();document.getElementById('diary-text').value=entry.text||'';document.getElementById('m-diary-title').textContent='✏️ Modifica Voce';openM('m-diary');}
 async function deleteDiaryEntry(date,id){if(!confirm('Eliminare? Perderai 1 Ciacca.'))return;const page=(S.diary||[]).find(p=>p.date===date);if(!page)return;const entry=page.entries.find(e=>e.id===id);if(entry){const ai=S.names.indexOf(entry.user);if(ai>=0)S.balances[ai]=Math.max(0,(S.balances[ai]||0)-1);}page.entries=page.entries.filter(e=>e.id!==id);if(!page.entries.length)S.diary=S.diary.filter(p=>p.date!==date);showToast('Eliminata');await push('deleteDiaryEntry',{date,entryId:id,balances:S.balances});}
