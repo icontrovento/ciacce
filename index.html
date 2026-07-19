@@ -176,10 +176,10 @@ textarea{resize:vertical;min-height:64px;line-height:1.5}
 .market-month{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);margin-bottom:2px}
 .market-countdown{font-size:11px;color:rgba(244,238,216,0.4);letter-spacing:1px}
 .market-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
-.market-item{background:rgba(244,238,216,0.04);border:1px solid rgba(200,168,75,0.25);border-radius:10px;padding:14px 10px;text-align:center;position:relative;overflow:hidden;cursor:pointer;transition:border-color 0.15s}
-.market-item:hover{border-color:rgba(200,168,75,0.45)}
-.market-item.owned{background:rgba(200,168,75,0.10);border-color:var(--gold)}
-.market-item.sold{background:rgba(244,238,216,0.02);border-color:rgba(200,168,75,0.12);opacity:0.55}
+.market-item{background:linear-gradient(180deg,rgba(244,238,216,0.05),rgba(244,238,216,0.02));border:1px solid rgba(200,168,75,0.25);border-top:3px solid rgba(200,168,75,0.55);border-radius:10px;padding:14px 10px;text-align:center;position:relative;overflow:hidden;cursor:pointer;transition:all 0.18s}
+.market-item:hover{border-color:rgba(200,168,75,0.5);transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,0.35)}
+.market-item.owned{background:linear-gradient(180deg,rgba(200,168,75,0.14),rgba(200,168,75,0.05));border-color:var(--gold);border-top-color:var(--gold2)}
+.market-item.sold{background:rgba(244,238,216,0.02);border-color:rgba(200,168,75,0.12);border-top-color:rgba(200,168,75,0.15);opacity:0.55}
 .market-item.sold .item-emoji{filter:grayscale(1)}
 .market-item.owned .item-emoji{filter:drop-shadow(0 0 6px rgba(200,168,75,0.5))}
 .item-emoji{font-size:38px;margin:18px 0 8px;display:block;line-height:1}
@@ -198,7 +198,15 @@ textarea{resize:vertical;min-height:64px;line-height:1.5}
 .room-tab{padding:5px 10px;border:1px solid rgba(200,168,75,0.2);border-radius:20px;background:transparent;color:rgba(244,238,216,0.4);font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
 .room-tab.on{background:rgba(200,168,75,0.14);border-color:var(--gold);color:var(--gold)}
 .room-canvas-wrap{position:relative;width:100%;aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:var(--room-bg,#2a1f14);border:2px solid rgba(200,168,75,0.25);touch-action:none}
-.room-floor{position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,0.02) 0,rgba(255,255,255,0.02) 1px,transparent 1px,transparent 20px),repeating-linear-gradient(-45deg,rgba(255,255,255,0.02) 0,rgba(255,255,255,0.02) 1px,transparent 1px,transparent 20px)}
+.room-wall{position:absolute;top:0;left:0;right:0;height:28%;background:
+  repeating-linear-gradient(135deg,rgba(255,255,255,0.025) 0 2px,transparent 2px 26px),
+  linear-gradient(180deg,#3d2f22,#33261b)}
+.room-baseboard{position:absolute;top:28%;left:0;right:0;height:5px;background:linear-gradient(180deg,#5a4230,#241a10);box-shadow:0 2px 4px rgba(0,0,0,0.4)}
+.room-floor{position:absolute;top:calc(28% + 5px);left:0;right:0;bottom:0;background:
+  repeating-linear-gradient(90deg,rgba(0,0,0,0.10) 0 2px,transparent 2px 64px),
+  repeating-linear-gradient(0deg,rgba(255,255,255,0.03) 0 1px,transparent 1px 22px),
+  linear-gradient(180deg,#4a3520,#3a2a18)}
+.room-floor::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,0,0,0) 0%,rgba(0,0,0,0.28) 100%)}
 .room-obj{position:absolute;font-size:32px;cursor:grab;user-select:none;transition:transform 0.1s;filter:drop-shadow(2px 3px 4px rgba(0,0,0,0.5));line-height:1;display:flex;align-items:center;justify-content:center;width:48px;height:48px}
 .room-obj:active{cursor:grabbing;transform:scale(1.15)}
 .room-obj.editing{outline:2px dashed var(--gold);border-radius:6px}
@@ -351,10 +359,16 @@ textarea{resize:vertical;min-height:64px;line-height:1.5}
         <div class="room-tabs" id="room-tabs"></div>
       </div>
       <div class="room-canvas-wrap" id="room-canvas">
+        <div class="room-wall"></div>
+        <div class="room-baseboard"></div>
         <div class="room-floor"></div>
         <div class="room-empty" id="room-empty"><span class="room-empty-icon">🏠</span><span>Compra oggetti al mercato<br>e arredala qui!</span></div>
       </div>
       <div class="inventory" id="inventory"></div>
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-title">📈 Valore del set di oggetti nel tempo</div>
+        <div id="portfolio-chart"></div>
+      </div>
     </div>
 
     <!-- CLASSIFICA -->
@@ -369,6 +383,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.5}
           <button class="btn btn-outline btn-sm" onclick="adminAddCiacce()">🎁 Assegna Ciacce</button>
           <button class="btn btn-red btn-sm" onclick="adminResetCiacce()">♻️ Reset Ciacce</button>
           <button class="btn btn-outline btn-sm" onclick="adminReleaseItem()">🏪 Rilascia oggetto ora</button>
+          <button class="btn btn-outline btn-sm" onclick="adminUpdatePrices()">📈 Aggiorna prezzi ora</button>
         </div>
       </div>
     </div>
@@ -500,30 +515,43 @@ textarea{resize:vertical;min-height:64px;line-height:1.5}
 // Lista completa con emoji, nome, prezzo base e mese di disponibilità (1-12)
 // Gli oggetti ruotano: ogni mese ne appaiono 4, in copia unica
 const CATALOG = [
-  {id:'marsupio',    emoji:'👜', name:'Marsupio rosso del Tosco',         price:8,  month:1},
-  {id:'ombrellino',  emoji:'☂️', name:'Ombrellino a scatto portatile',    price:6,  month:1},
-  {id:'briscola',    emoji:'🃏', name:'Carte da Briscola',      price:5,  month:2},
-  {id:'cowboy',      emoji:'🤠', name:'Cappello da Cowboy',     price:7,  month:2},
-  {id:'kefia',       emoji:'🧣', name:'Bandana Verde',            price:5,  month:3},
-  {id:'pallone',     emoji:'⚽', name:'Pallone da Calcio',      price:6,  month:3},
-  {id:'volley',      emoji:'🏐', name:'Pallone da Volley',      price:6,  month:4},
-  {id:'bici-rossa',  emoji:'🚲', name:'Bici Rossa da Corsa',   price:10, month:4},
-  {id:'bici-blu',    emoji:'🚵', name:'Bici Azzurra da Corsa', price:10, month:5},
-  {id:'chitarra',    emoji:'🎸', name:'Chitarra classica',      price:9,  month:5},
-  {id:'zaino',       emoji:'🎒', name:'Zaino da Escursione',    price:7,  month:6},
-  {id:'tenda',       emoji:'⛺', name:'Tenda da Campeggio',     price:8,  month:6},
-  {id:'pallanuoto',  emoji:'🤽', name:'Cuffia da Pallanuoto',   price:5,  month:7},
-  {id:'kayak',       emoji:'🛶', name:'Kayak Arancione',        price:11, month:7},
-  {id:'frisbee',     emoji:'🥏', name:'Frisbee Fluo',           price:4,  month:8},
-  {id:'skateboard',  emoji:'🛹', name:'Skateboard Vintage',     price:9,  month:8},
-  {id:'chitbass',    emoji:'🎺', name:'Tromba Lucida',          price:8,  month:9},
-  {id:'dama',        emoji:'♟️', name:'Scacchiera da Viaggio',  price:6,  month:9},
-  {id:'torcia',      emoji:'🔦', name:'Torcia da Speleologo',   price:5,  month:10},
-  {id:'fischio',     emoji:'📯', name:'Corno da Stadio',        price:4,  month:10},
-  {id:'mantella',    emoji:'🧥', name:'Mantella Impermeabile',  price:7,  month:11},
-  {id:'lanterna',    emoji:'🏮', name:'Lanterna Rossa',         price:6,  month:11},
-  {id:'maschera',    emoji:'🎭', name:'Maschera di Carnevale',  price:8,  month:12},
-  {id:'pattini',     emoji:'⛸️', name:'Pattini da Ghiaccio',   price:9,  month:12},
+  {id:'marsupio',    emoji:'👜', icon:'shoulder-bag',   name:'Marsupio rosso del Tosco',         price:8,  month:1},
+  {id:'ombrellino',  emoji:'☂️', icon:'umbrella',       name:'Ombrellino a scatto portatile',    price:6,  month:1},
+  {id:'briscola',    emoji:'🃏', icon:'card-play',      name:'Carte da Briscola',      price:5,  month:2},
+  {id:'cowboy',      emoji:'🤠', icon:'cowboy-hat',     name:'Cappello da Cowboy',     price:7,  month:2},
+  {id:'kefia',       emoji:'🧣', icon:'scarf',          name:'Bandana Verde',            price:5,  month:3},
+  {id:'pallone',     emoji:'⚽', icon:'soccer-ball',    name:'Pallone da Calcio',      price:6,  month:3},
+  {id:'volley',      emoji:'🏐', icon:'volleyball',     name:'Pallone da Volley',      price:6,  month:4},
+  {id:'bici-rossa',  emoji:'🚲', icon:'bike',           name:'Bici Rossa da Corsa',   price:10, month:4},
+  {id:'bici-blu',    emoji:'🚵', icon:'mountain-bike',  name:'Bici Azzurra da Corsa', price:10, month:5},
+  {id:'chitarra',    emoji:'🎸', icon:'guitar',         name:'Chitarra classica',      price:9,  month:5},
+  {id:'zaino',       emoji:'🎒', icon:'backpack',       name:'Zaino da Escursione',    price:7,  month:6},
+  {id:'tenda',       emoji:'⛺', icon:'camping-tent',   name:'Tenda da Campeggio',     price:8,  month:6},
+  {id:'pallanuoto',  emoji:'🤽', icon:'swim-fins',      name:'Cuffia da Pallanuoto',   price:5,  month:7},
+  {id:'kayak',       emoji:'🛶', icon:'canoe',          name:'Kayak Arancione',        price:11, month:7},
+  {id:'frisbee',     emoji:'🥏', icon:'flying-disc',    name:'Frisbee Fluo',           price:4,  month:8},
+  {id:'skateboard',  emoji:'🛹', icon:'skateboard',     name:'Skateboard Vintage',     price:9,  month:8},
+  {id:'chitbass',    emoji:'🎺', icon:'trumpet',        name:'Tromba Lucida',          price:8,  month:9},
+  {id:'dama',        emoji:'♟️', icon:'chess-king',     name:'Scacchiera da Viaggio',  price:6,  month:9},
+  {id:'torcia',      emoji:'🔦', icon:'flashlight',     name:'Torcia da Speleologo',   price:5,  month:10},
+  {id:'fischio',     emoji:'📯', icon:'vuvuzelas',      name:'Corno da Stadio',        price:4,  month:10},
+  {id:'mantella',    emoji:'🧥', icon:'cape',           name:'Mantella Impermeabile',  price:7,  month:11},
+  {id:'lanterna',    emoji:'🏮', icon:'chinese-lantern',name:'Lanterna Rossa',         price:6,  month:11},
+  {id:'maschera',    emoji:'🎭', icon:'drama-masks',    name:'Maschera di Carnevale',  price:8,  month:12},
+  {id:'pattini',     emoji:'⛸️', icon:'ice-skate',      name:'Pattini da Ghiaccio',   price:9,  month:12},
+  // — nuovi oggetti (arredamento e decorazioni per la stanza) —
+  {id:'divano',      emoji:'🛋️', icon:'sofa',           name:'Divanetto Vintage',     price:12, month:1},
+  {id:'pianta',      emoji:'🪴', icon:'plant-watering', name:'Pianta da Salotto',      price:6,  month:2},
+  {id:'lampada',     emoji:'💡', icon:'light-bulb',     name:'Lampada da Terra',       price:7,  month:3},
+  {id:'quadro',      emoji:'🖼️', icon:'picture',        name:'Quadro Incorniciato',   price:8,  month:4},
+  {id:'tappeto',     emoji:'🔴', icon:'rug',            name:'Tappeto Persiano',       price:9,  month:5},
+  {id:'libreria',    emoji:'📚', icon:'bookshelf',      name:'Libreria in Legno',      price:11, month:6},
+  {id:'specchio',    emoji:'🪞', icon:'mirror-mirror',  name:'Specchio Antico',        price:8,  month:7},
+  {id:'orologio',    emoji:'🕰️', icon:'grandfather-clock',name:'Orologio a Pendolo',  price:10, month:8},
+  {id:'discoball',   emoji:'🪩', icon:'disco-ball',     name:'Palla da Discoteca',     price:13, month:9},
+  {id:'candela',     emoji:'🕯️', icon:'candle-holder',  name:'Candelabro',            price:5,  month:10},
+  {id:'acquario',    emoji:'🐠', icon:'fish-bowl',      name:'Acquario Tropicale',     price:12, month:11},
+  {id:'globo',       emoji:'🌍', icon:'earth-crab',     name:'Mappamondo',             price:9,  month:12},
 ];
 
 // ══ STATE ═════════════════════════════════════════════════════════════════════
@@ -536,6 +564,8 @@ let S = {
   trades:[],      // proposte di scambio pendenti
   marketReleased:[], // [{itemId, date}] oggetti sbloccati dal rilascio settimanale
   bereal:{},      // stato della sfida foto del giorno
+  prices:{},        // {itemId: prezzo attuale}
+  priceHistory:{},  // {itemId: [{date,price}, ...]} — ultime quotazioni, per la media mobile
 };
 let me = null;
 let scriptUrl = '';
@@ -553,6 +583,19 @@ const UCOLORS=['var(--u0)','var(--u1)','var(--u2)'];
 const UTCLASS=['u0t','u1t','u2t'];
 const UBGAV=['rgba(53,100,220,0.25)','rgba(180,60,120,0.25)','rgba(45,160,100,0.25)'];
 const CIACCA='🪙';
+
+// Converte un'emoji nel suo URL Twemoji (illustrazioni SVG piatte e colorate,
+// stile Twitter/X, gratuite e open source). Le usiamo per gli oggetti del
+// mercato/stanza al posto del font emoji nativo, che varia (e a volte è
+// bruttino) da dispositivo a dispositivo: così l'aspetto è sempre uniforme
+// e più curato, senza dover disegnare nulla a mano.
+function twemojiUrl(emoji){
+  const cps=Array.from(emoji).map(c=>c.codePointAt(0).toString(16)).filter(cp=>cp!=='fe0f').join('-');
+  return `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${cps}.svg`;
+}
+function objIconImg(item){
+  return `<img src="${twemojiUrl(item.emoji)}" alt="${item.name}" draggable="false" style="width:100%;height:100%;object-fit:contain;pointer-events:none" onerror="this.outerHTML='${item.emoji}'">`;
+}
 
 // ══ BOOT ══════════════════════════════════════════════════════════════════════
 window.addEventListener('load',()=>{
@@ -600,6 +643,7 @@ async function sync(){
       S.bets=data.bets||[];S.polls=data.polls||[];S.reviews=data.reviews||[];S.diary=data.diary||[];
       S.market=data.market||{};S.inventory=data.inventory||{};S.rooms=data.rooms||{};S.trades=data.trades||[];S.marketReleased=data.marketReleased||[];
       S.bereal=data.bereal||{};
+      S.prices=data.prices||{};S.priceHistory=data.priceHistory||{};
       localStorage.setItem('ciacce_names',JSON.stringify(S.names));
       localStorage.setItem('ciacce_cache',JSON.stringify({balances:S.balances,bets:S.bets,polls:S.polls,reviews:S.reviews,diary:S.diary,market:S.market,inventory:S.inventory,rooms:S.rooms,trades:S.trades,marketReleased:S.marketReleased}));
       lastSync=new Date();renderAll();
@@ -838,6 +882,24 @@ function renderBerealBanner(){
 // Il server (Apps Script) ne sblocca uno a caso ogni settimana e lo registra
 // in S.marketReleased = [{itemId, date}]. Qui mostriamo solo quelli sbloccati.
 
+function currentPrice(item){ return S.prices[item.id] || item.price; }
+// Media mobile sulle ultime 3 quotazioni disponibili (se ce ne sono meno, usa quelle che ci sono).
+function movingAvg3(itemId){
+  const hist=(S.priceHistory[itemId]||[]).slice(-3);
+  if(!hist.length)return null;
+  return hist.reduce((a,h)=>a+h.price,0)/hist.length;
+}
+// Freccetta verde/rossa con la percentuale rispetto alla media mobile — SOLO per il Mercato.
+function trendBadge(item){
+  const avg=movingAvg3(item.id);
+  if(avg===null||avg===0)return'';
+  const cur=currentPrice(item);
+  const pct=((cur-avg)/avg)*100;
+  const up=pct>=0;
+  const color=up?'#4caf50':'#e05656';
+  return `<span style="display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:700;color:${color}">${up?'▲':'▼'} ${Math.abs(pct).toFixed(1)}%</span>`;
+}
+
 function renderMarket(){
   ts('ts-market');
   const released = S.marketReleased || [];
@@ -867,7 +929,8 @@ function renderMarket(){
     const owner = mktEntry?.owner || null;
     const isMine = owner === myName;
     const isSold = owner !== null && owner !== undefined;
-    const resellPrice = mktEntry ? Math.ceil(mktEntry.purchasePrice/2) : 0;
+    const cur = currentPrice(item);
+    const resellPrice = Math.max(1,Math.ceil(cur*0.9)); // rivendi al prezzo di mercato ATTUALE (con un piccolo spread del 10%)
     const releaseDate = dateMap[item.id] ? new Date(dateMap[item.id]) : null;
     const isNew = releaseDate && (now - releaseDate) < (3*24*60*60*1000);
 
@@ -879,9 +942,10 @@ function renderMarket(){
 
     return`<div class="market-item${isSold&&!isMine?' sold':''}${isMine?' owned':''}" onclick="openItem('${item.id}')">
       ${badge}
-      <div class="item-emoji">${item.emoji}</div>
+      <div style="position:absolute;top:8px;right:8px">${trendBadge(item)}</div>
+      <div class="item-emoji">${objIconImg(item)}</div>
       <div class="item-name">${item.name}</div>
-      <div class="item-price">${isMine?`rivendi a ${CIACCA}${resellPrice}`:isSold?`${owner}`:`${CIACCA} ${item.price}`}</div>
+      <div class="item-price">${isMine?`rivendi a ${CIACCA}${resellPrice}`:isSold?`${owner}`:`${CIACCA} ${cur}`}</div>
     </div>`;
   }).join('');
 
@@ -903,7 +967,7 @@ function renderMarket(){
       const wantItem=CATALOG.find(x=>x.id===t.wantItemId);
       if(!offItem||!wantItem)return'';
       return`<div class="trade-card">
-        <div class="trade-emoji">${offItem.emoji}</div>
+        <div class="trade-emoji">${objIconImg(offItem)}</div>
         <div class="trade-info"><div class="trade-name">${offItem.name}</div><div class="trade-from">${t.from} vuole il tuo ${wantItem.emoji} ${wantItem.name}</div><div class="trade-from" style="opacity:0.6">Scade il ${new Date(t.expiresAt).toLocaleDateString('it-IT')}</div></div>
         <div class="trade-actions" style="flex-direction:column;gap:4px">
           <button class="btn btn-gold btn-sm" onclick="acceptTrade('${t.id}')">✓ Accetta</button>
@@ -920,7 +984,7 @@ function renderMarket(){
       const wantItem=CATALOG.find(x=>x.id===t.wantItemId);
       if(!offItem||!wantItem)return'';
       return`<div class="trade-card">
-        <div class="trade-emoji">${wantItem.emoji}</div>
+        <div class="trade-emoji">${objIconImg(wantItem)}</div>
         <div class="trade-info"><div class="trade-name">${t.to} vuole il tuo ${offItem.emoji} ${offItem.name}</div><div class="trade-from">In cambio del suo ${wantItem.name} + ${CIACCA}${t.counterCiacce||0} da te</div></div>
         <div class="trade-actions" style="flex-direction:column;gap:4px">
           <button class="btn btn-gold btn-sm" onclick="acceptTrade('${t.id}')">✓ Accetta</button>
@@ -963,14 +1027,17 @@ function openItem(itemId){
   const owner=mktEntry?.owner||null;
   const isMine=owner===myName;
   const isSold=!!owner&&!isMine;
-  const resellPrice=mktEntry?Math.ceil(mktEntry.purchasePrice/2):0;
+  const cur=currentPrice(item);
+  const resellPrice=Math.max(1,Math.ceil(cur*0.9));
   const myBal=S.balances[me]||0;
 
   document.getElementById('item-detail-content').innerHTML=`
     <div style="text-align:center;margin-bottom:14px">
-      <div style="font-size:64px;line-height:1;margin-bottom:8px">${item.emoji}</div>
+      <div style="width:80px;height:80px;margin:0 auto 8px">${objIconImg(item)}</div>
       <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--gold)">${item.name}</div>
+      <div style="margin-top:4px">${trendBadge(item)}</div>
       ${owner?`<div style="font-size:12px;color:rgba(244,238,216,0.4);margin-top:4px">Proprietario: ${owner}</div>`:''}
+      ${isMine&&mktEntry?`<div style="font-size:11px;color:rgba(244,238,216,0.35);margin-top:2px">Pagato ${CIACCA}${mktEntry.purchasePrice} · ora vale ${CIACCA}${cur}</div>`:''}
     </div>`;
 
   const footer=document.getElementById('item-detail-footer');
@@ -980,8 +1047,8 @@ function openItem(itemId){
     footer.innerHTML+=`<button class="btn btn-outline btn-sm" onclick="closeM('m-item');openTrade('${itemId}')">🔄 Scambia</button>`;
     footer.innerHTML+=`<button class="btn btn-red btn-sm" onclick="resellItem('${itemId}')">Rivendi ${CIACCA}${resellPrice}</button>`;
   } else if(!isSold){
-    if(myBal>=item.price)footer.innerHTML+=`<button class="btn btn-gold" onclick="buyItem('${itemId}')">Compra ${CIACCA}${item.price}</button>`;
-    else footer.innerHTML+=`<button class="btn btn-ghost" disabled style="opacity:0.4">Servono ${CIACCA}${item.price} (ne hai ${myBal})</button>`;
+    if(myBal>=cur)footer.innerHTML+=`<button class="btn btn-gold" onclick="buyItem('${itemId}')">Compra ${CIACCA}${cur}</button>`;
+    else footer.innerHTML+=`<button class="btn btn-ghost" disabled style="opacity:0.4">Servono ${CIACCA}${cur} (ne hai ${myBal})</button>`;
   }
   openM('m-item');
 }
@@ -991,8 +1058,9 @@ async function buyItem(itemId){
   if(!item) return;
 
   const myName = S.names[me];
+  const price = currentPrice(item);
 
-  if((S.balances[me] || 0) < item.price){
+  if((S.balances[me] || 0) < price){
     showToast('Ciacce insufficienti!');
     return;
   }
@@ -1003,12 +1071,12 @@ async function buyItem(itemId){
   if(!S.inventory[myName]) S.inventory[myName] = [];
 
   // aggiorna stato locale
-  S.balances[me] = (S.balances[me] || 0) - item.price;
-  S.market[itemId] = { owner: myName, purchasePrice: item.price };
-  S.inventory[myName].push({ itemId, purchasePrice: item.price });
+  S.balances[me] = (S.balances[me] || 0) - price;
+  S.market[itemId] = { owner: myName, purchasePrice: price };
+  S.inventory[myName].push({ itemId, purchasePrice: price });
 
   closeM('m-item');
-  showToast(`${item.emoji} ${item.name} acquistato!`);
+  showToast(`${item.emoji} ${item.name} acquistato a ${CIACCA}${price}!`);
   renderMarket();
   renderRoom();
   renderClassifica();
@@ -1016,7 +1084,7 @@ async function buyItem(itemId){
   const res = await push('buyItem', {
     itemId,
     buyer: myName,
-    price: item.price,
+    price,
     balances: S.balances,
     market: S.market,
     inventory: S.inventory
@@ -1044,7 +1112,8 @@ async function resellItem(itemId){
 
   if(!confirm(`Rivendere ${item.name}?`)) return;
 
-  const resellPrice = Math.ceil(invEntry.purchasePrice / 2);
+  const resellPrice = Math.max(1,Math.ceil(currentPrice(item)*0.9)); // prezzo di MERCATO attuale, con spread del 10%
+  const profit = resellPrice - invEntry.purchasePrice;
 
   // rimuovi dall'inventario
   S.inventory[myName] = (S.inventory[myName] || []).filter(x => x.itemId !== itemId);
@@ -1057,7 +1126,7 @@ async function resellItem(itemId){
   S.balances[me] = (S.balances[me] || 0) + resellPrice;
 
   closeM('m-item');
-  showToast(`Rivenduto per ${CIACCA}${resellPrice}!`);
+  showToast(profit>=0?`Rivenduto per ${CIACCA}${resellPrice}! (+${CIACCA}${profit} 📈)`:`Rivenduto per ${CIACCA}${resellPrice} (${CIACCA}${profit} 📉)`);
   renderMarket();
   renderRoom();
   renderClassifica();
@@ -1086,14 +1155,14 @@ function openTrade(itemId){
   tradeItemId=itemId;tradeOfferItemId=null;tradeTo=null;
   const item=CATALOG.find(x=>x.id===itemId);if(!item)return;
   const myName=S.names[me];
-  document.getElementById('trade-preview').innerHTML=`<div style="text-align:center;padding:12px;background:rgba(244,238,216,0.04);border-radius:8px;margin-bottom:12px"><div style="font-size:36px">${item.emoji}</div><div style="font-family:'Special Elite',cursive;font-size:14px;color:var(--ivory)">${item.name}</div><div style="font-size:11px;color:rgba(244,238,216,0.4);margin-top:4px">Vuoi scambiare questo oggetto</div></div>`;
+  document.getElementById('trade-preview').innerHTML=`<div style="text-align:center;padding:12px;background:rgba(244,238,216,0.04);border-radius:8px;margin-bottom:12px"><div style="width:48px;height:48px;margin:0 auto">${objIconImg(item)}</div><div style="font-family:'Special Elite',cursive;font-size:14px;color:var(--ivory)">${item.name}</div><div style="font-size:11px;color:rgba(244,238,216,0.4);margin-top:4px">Vuoi scambiare questo oggetto</div></div>`;
   // Oggetti che l'altro possiede
   const others=S.names.filter(n=>n!==myName);
   const offGrid=document.getElementById('trade-offer-grid');
   offGrid.innerHTML=`<div style="font-size:12px;color:rgba(244,238,216,0.4);width:100%">Seleziona cosa vuoi in cambio (dall'inventario degli altri)</div>`+
   others.flatMap(n=>(S.inventory[n]||[]).map(inv=>{
     const ci=CATALOG.find(x=>x.id===inv.itemId);if(!ci)return'';
-    return`<div class="inv-item" id="toff-${ci.id}" onclick="selectTradeOffer('${ci.id}','${n}')"><span class="ii-emoji">${ci.emoji}</span><span class="ii-name">${ci.name}</span><span style="font-size:9px;color:rgba(244,238,216,0.35)">${n}</span></div>`;
+    return`<div class="inv-item" id="toff-${ci.id}" onclick="selectTradeOffer('${ci.id}','${n}')"><span class="ii-emoji">${objIconImg(ci)}</span><span class="ii-name">${ci.name}</span><span style="font-size:9px;color:rgba(244,238,216,0.35)">${n}</span></div>`;
   })).join('') || `<div style="font-size:12px;color:rgba(244,238,216,0.3)">Gli altri non hanno oggetti</div>`;
   // A chi
   const toBtns=document.getElementById('trade-to-btns');
@@ -1206,7 +1275,7 @@ function renderRoom(){
 
     const el = document.createElement('div');
     el.className = 'room-obj';
-    el.textContent = cat.emoji;
+    el.innerHTML = objIconImg(cat);
 
     el.style.left = (obj.x || 10) + '%';
     el.style.top = (obj.y || 10) + '%';
@@ -1224,6 +1293,7 @@ function renderRoom(){
 
   if(viewingRoomOf !== myName){
     inv.innerHTML = '';
+    renderPortfolioChart(viewingRoomOf);
     return;
   }
 
@@ -1239,6 +1309,7 @@ function renderRoom(){
        <div style="font-size:12px;color:rgba(244,238,216,0.25)">
          Compra oggetti al mercato!
        </div>`;
+    renderPortfolioChart(viewingRoomOf);
     return;
   }
 
@@ -1255,7 +1326,7 @@ function renderRoom(){
       return `
         <div class="inv-item${placed?' in-room':''}"
              onclick="${placed ? '' : `placeItem('${item.itemId}')`}">
-          <span class="ii-emoji">${cat.emoji}</span>
+          <span class="ii-emoji">${objIconImg(cat)}</span>
           <span class="ii-name">
             ${cat.name}
             ${placed ? '<br><span style="color:rgba(200,168,75,0.5)">in stanza</span>' : ''}
@@ -1264,9 +1335,84 @@ function renderRoom(){
     }).join('') +
 
     `</div>`;
+  renderPortfolioChart(viewingRoomOf);
 }
 
 function viewRoom(name){viewingRoomOf=name;renderRoom();}
+
+// Ricostruisce l'andamento del valore totale degli oggetti posseduti da un
+// giocatore, giorno per giorno, usando lo storico prezzi di ogni oggetto che
+// possiede ATTUALMENTE. Approssimazione consapevole: se in passato possedeva
+// oggetti diversi da oggi (comprati/rivenduti/scambiati nel frattempo), quei
+// valori storici non vengono ricostruiti — mostriamo l'andamento di "quanto
+// varrebbe oggi il suo inventario attuale, ai prezzi di ogni giorno passato".
+function computePortfolioSeries(playerName){
+  const inv=(S.inventory&&S.inventory[playerName])||[];
+  if(!inv.length)return[];
+  const dateSet=new Set();
+  inv.forEach(it=>{(S.priceHistory[it.itemId]||[]).forEach(h=>dateSet.add(h.date));});
+  const dates=[...dateSet].sort((a,b)=>parseItDate(a)-parseItDate(b));
+  const series=dates.map(date=>{
+    let total=0;
+    inv.forEach(it=>{
+      const hist=S.priceHistory[it.itemId]||[];
+      const entry=hist.find(h=>h.date===date);
+      total+=entry?entry.price:it.purchasePrice;
+    });
+    return{date,total};
+  });
+  // Aggiunge il valore di "oggi" coi prezzi attuali (potrebbe non coincidere
+  // con l'ultimo giorno registrato se l'aggiornamento notturno non è ancora girato)
+  const todayStr=today();
+  const todayTotal=inv.reduce((sum,it)=>{
+    const cat=CATALOG.find(x=>x.id===it.itemId);
+    return sum+(cat?currentPrice(cat):it.purchasePrice);
+  },0);
+  if(!series.length||series[series.length-1].date!==todayStr)series.push({date:todayStr,total:todayTotal});
+  else series[series.length-1].total=todayTotal;
+  return series;
+}
+
+function renderPortfolioChart(playerName){
+  const el=document.getElementById('portfolio-chart');if(!el)return;
+  const series=computePortfolioSeries(playerName);
+  if(series.length<2){
+    el.innerHTML=`<div style="font-size:12px;color:rgba(244,238,216,0.3)">Serve almeno qualche giorno di quotazioni per mostrare l'andamento${playerName!==S.names[me]?` di ${playerName}`:''}.</div>`;
+    return;
+  }
+  const w=280,h=90,pad=6;
+  const values=series.map(s=>s.total);
+  const min=Math.min(...values),max=Math.max(...values);
+  const range=(max-min)||1;
+  const stepX=(w-pad*2)/(series.length-1);
+  const pts=series.map((s,i)=>{
+    const x=pad+i*stepX;
+    const y=pad+(h-pad*2)*(1-(s.total-min)/range);
+    return[x,y];
+  });
+  const pathD=pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const areaD=pathD+` L${pts[pts.length-1][0].toFixed(1)},${h-pad} L${pts[0][0].toFixed(1)},${h-pad} Z`;
+  const first=series[0].total,last=series[series.length-1].total;
+  const pct=first?((last-first)/first*100):0;
+  const up=pct>=0;
+  const lineColor=up?'#4caf50':'#e05656';
+  el.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+      <span style="font-size:18px;font-weight:700;color:var(--gold);font-family:'Playfair Display',serif">${CIACCA}${Math.round(last)}</span>
+      <span style="font-size:11px;font-weight:700;color:${lineColor}">${up?'▲':'▼'} ${Math.abs(pct).toFixed(1)}% nel periodo</span>
+    </div>
+    <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:70px;display:block">
+      <defs><linearGradient id="pf-grad-${playerName.replace(/\W/g,'')}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="${lineColor}" stop-opacity="0"/>
+      </linearGradient></defs>
+      <path d="${areaD}" fill="url(#pf-grad-${playerName.replace(/\W/g,'')})" stroke="none"/>
+      <path d="${pathD}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(244,238,216,0.3);margin-top:2px">
+      <span>${series[0].date}</span><span>${series[series.length-1].date}</span>
+    </div>`;
+}
 
 function placeItem(itemId){
   const myName = S.names[me];
@@ -1397,6 +1543,16 @@ async function adminReleaseItem(){
   renderMarket();
   const item = CATALOG.find(x => x.id === res.released);
   showToast(item ? `${item.emoji} ${item.name} sbloccato!` : 'Nuovo oggetto sbloccato!');
+}
+
+async function adminUpdatePrices(){
+  if(!confirm('Forzare subito un aggiornamento delle quotazioni di mercato?')) return;
+  const res = await push('adminUpdatePrices', { adminKey: ADMIN_KEY });
+  if(!res || !res.ok){ showToast('Errore operazione admin'); return; }
+  S.prices = res.prices || S.prices;
+  await sync(); // ricarica anche priceHistory aggiornato
+  renderMarket();
+  showToast('📈 Quotazioni aggiornate!');
 }
 
 async function addBet(){
