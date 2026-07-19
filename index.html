@@ -584,17 +584,9 @@ const UTCLASS=['u0t','u1t','u2t'];
 const UBGAV=['rgba(53,100,220,0.25)','rgba(180,60,120,0.25)','rgba(45,160,100,0.25)'];
 const CIACCA='🪙';
 
-// Converte un'emoji nel suo URL Twemoji (illustrazioni SVG piatte e colorate,
-// stile Twitter/X, gratuite e open source). Le usiamo per gli oggetti del
-// mercato/stanza al posto del font emoji nativo, che varia (e a volte è
-// bruttino) da dispositivo a dispositivo: così l'aspetto è sempre uniforme
-// e più curato, senza dover disegnare nulla a mano.
-function twemojiUrl(emoji){
-  const cps=Array.from(emoji).map(c=>c.codePointAt(0).toString(16)).filter(cp=>cp!=='fe0f').join('-');
-  return `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${cps}.svg`;
-}
+// Semplice emoji nativa del dispositivo (nessuna illustrazione esterna).
 function objIconImg(item){
-  return `<img src="${twemojiUrl(item.emoji)}" alt="${item.name}" draggable="false" style="width:100%;height:100%;object-fit:contain;pointer-events:none" onerror="this.outerHTML='${item.emoji}'">`;
+  return `<span style="font-size:1em;line-height:1;display:flex;align-items:center;justify-content:center;width:100%;height:100%">${item.emoji}</span>`;
 }
 
 // ══ BOOT ══════════════════════════════════════════════════════════════════════
@@ -1033,7 +1025,7 @@ function openItem(itemId){
 
   document.getElementById('item-detail-content').innerHTML=`
     <div style="text-align:center;margin-bottom:14px">
-      <div style="width:80px;height:80px;margin:0 auto 8px">${objIconImg(item)}</div>
+      <div style="width:80px;height:80px;margin:0 auto 8px;font-size:64px">${objIconImg(item)}</div>
       <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--gold)">${item.name}</div>
       <div style="margin-top:4px">${trendBadge(item)}</div>
       ${owner?`<div style="font-size:12px;color:rgba(244,238,216,0.4);margin-top:4px">Proprietario: ${owner}</div>`:''}
@@ -1155,7 +1147,7 @@ function openTrade(itemId){
   tradeItemId=itemId;tradeOfferItemId=null;tradeTo=null;
   const item=CATALOG.find(x=>x.id===itemId);if(!item)return;
   const myName=S.names[me];
-  document.getElementById('trade-preview').innerHTML=`<div style="text-align:center;padding:12px;background:rgba(244,238,216,0.04);border-radius:8px;margin-bottom:12px"><div style="width:48px;height:48px;margin:0 auto">${objIconImg(item)}</div><div style="font-family:'Special Elite',cursive;font-size:14px;color:var(--ivory)">${item.name}</div><div style="font-size:11px;color:rgba(244,238,216,0.4);margin-top:4px">Vuoi scambiare questo oggetto</div></div>`;
+  document.getElementById('trade-preview').innerHTML=`<div style="text-align:center;padding:12px;background:rgba(244,238,216,0.04);border-radius:8px;margin-bottom:12px"><div style="width:48px;height:48px;margin:0 auto;font-size:36px">${objIconImg(item)}</div><div style="font-family:'Special Elite',cursive;font-size:14px;color:var(--ivory)">${item.name}</div><div style="font-size:11px;color:rgba(244,238,216,0.4);margin-top:4px">Vuoi scambiare questo oggetto</div></div>`;
   // Oggetti che l'altro possiede
   const others=S.names.filter(n=>n!==myName);
   const offGrid=document.getElementById('trade-offer-grid');
